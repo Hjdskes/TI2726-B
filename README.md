@@ -9,6 +9,7 @@
 
 #Deadlines
 |Week|Assignment|Deliverable|
+|----|----------|-----------|
 |4| Requirements & Set up| Report of 1 A4|
 |5|ROS tutorials|none|
 |6|Arduino|none|
