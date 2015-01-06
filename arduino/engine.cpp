@@ -12,48 +12,45 @@
 Engine::Engine(Motor *left, Motor *right) : left(left), right(right) {
 }
 
-static void turnLeft() {
-	left.backward();
-	right.forward();
+static void turnLeft(int speed) {
+	left.backward(speed);
+	right.forward(speed);
 }
 
-static void turnRight() {
-	left.forward();
-	right.backward();
+static void turnRight(int speed) {
+	left.forward(speed);
+	right.backward(speed);
 }
 
-static void moveForward() {
-	left.forward();
-	right.forward();
+static void moveForward(int speed) {
+	left.forward(speed);
+	right.forward(speed);
 }
 
-static void moveBackward() {
-	left.backward();
-	right.backward();
+static void moveBackward(int speed) {
+	left.backward(speed);
+	right.backward(speed);
 }
 
 void Engine::move(bool forward, int speed, int angular) {
-	// FIXME: might be moved inside conditions to process angular.
-	left.setSpeed(speed);
-	right.setSpeed(speed);
-
+	// FIXME: perhaps use angular to control speed when taking corners.
 	if (angular == 0) {
 		if (forward) {
-			moveForward();
+			moveForward(speed);
 		} else {
-			moveBackward();
+			moveBackward(speed);
 		}
 	} else if (angular < 0) {
 		if (forward) {
-			turnLeft();
+			turnLeft(speed);
 		} else {
-			turnRight();
+			turnRight(speed);
 		}
 	} else {
 		if (forward) {
-			turnRight();
+			turnRight(speed);
 		} else {
-			turnLeft();
+			turnLeft(speed);
 		}
 	}
 }
