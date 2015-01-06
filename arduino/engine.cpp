@@ -6,47 +6,61 @@
  * Piet van Agtmaal, 4321278
  */
 
+#include "engine.h"
+#include "motor.h"
+
 Engine::Engine(Motor *left, Motor *right) : left(left), right(right) {
 }
 
-void Engine::forward(int speed, float angle) {
-	// FIXME: might be moved inside conditions.
-	left.setSpeed(speed);
-	right.setSpeed(speed);
-
-	if (angle != 0.0f) {
-		if (angle < 0.0f) {
-			// TODO: turn left.
-		} else {
-			// TODO: turn right.
-		}
-	} else {
-		left.forward();
-		right.forward();
-	}
+static void turnLeft() {
+	left.backward();
+	right.forward();
 }
 
-void Engine::backward(int speed, float angle) {
-	// FIXME: possible code-duplication with Engine::forward.
-	// FIXME: might be moved inside conditions.
+static void turnRight() {
+	left.forward();
+	right.backward();
+}
+
+static void moveForward() {
+	left.forward();
+	right.forward();
+}
+
+static void moveBackward() {
+	left.backward();
+	right.backward();
+}
+
+void Engine::move(bool forward, int speed, int angular) {
+	// FIXME: might be moved inside conditions to process angular.
 	left.setSpeed(speed);
 	right.setSpeed(speed);
 
-	if (angle != 0.0f) {
-		if (angle < 0.0f) {
-			// TODO: turn left.
+	if (angular == 0) {
+		if (forward) {
+			moveForward();
 		} else {
-			// TODO: turn right.
+			moveBackward();
+		}
+	} else if (angular < 0) {
+		if (forward) {
+			turnLeft();
+		} else {
+			turnRight();
 		}
 	} else {
-		left.backward();
-		right.backward();
+		if (forward) {
+			turnRight();
+		} else {
+			turnLeft();
+		}
 	}
 }
 
 void Engine::stop() {
 	left.stop();
 	right.stop();
-	//delay(25); //Original code had this. (Why) Was this needed?
+	//delay(25); // FIXME: Original code had this. (Why) Was this needed?
 }
 

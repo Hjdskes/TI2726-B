@@ -9,6 +9,9 @@
 #ifndef _ENGINE_H_
 #define _ENGINE_H_
 
+/* Forward declaration. */
+class Motor;
+
 /**
  * This class represent the actual engine in totality. It makes use of two Motor
  * instances; one for the left motor and one for the right motor.
@@ -26,13 +29,10 @@ class Engine {
 		 */
 		Engine(Motor *left, Motor *right);
 		/**
-		 * Makes the robot move forward, using the given speed and angle.
+		 * Makes the robot move in the specified direction, using the given speed and angular value.
+		 * Setting forward to true means forward movement, whereas false means backward.
 		 */
-		void forward(int speed, float angle);
-		/**
-		 * Makes the robot move backward, using the given speed and angle.
-		 */
-		void backward(int speed, float angle);
+		void move(bool forward, int speed, float angle);
 		/**
 		 * Stops the robot.
 		 */
