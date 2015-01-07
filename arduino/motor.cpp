@@ -6,6 +6,8 @@
  * Piet van Agtmaal, 4321278
  */
 
+#include "motor.h"
+
 Motor::Motor(int fwd, int rev, int en) : fwd(fwd), rev(rev), en(en) {
 	pinMode(fwd, OUTPUT);
 	pinMode(rev, OUTPUT);
