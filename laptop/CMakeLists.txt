@@ -56,10 +56,10 @@ include_directories(
 )
 
 # add_library(line_follower
-#   src/${PROJECT_NAME}/line_follower.cpp
+#   ${PROJECT_NAME}/line_follower.cpp
 # )
 
-add_executable(line_follower_node src/line_follower_node.cpp)
+add_executable(line_follower_node line_follower_node.cpp)
 
 # add_dependencies(line_follower_node line_follower_generate_messages_cpp)
 
