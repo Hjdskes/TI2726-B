@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(line_follower)
+project(linefollower)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -40,7 +40,7 @@ find_package(OpenCV REQUIRED)
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES line_follower
+#  LIBRARIES linefollower
 #  CATKIN_DEPENDS cv_bridge image_transport opencv2 roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
@@ -55,16 +55,16 @@ include_directories(
   ${opencv_INCLUDE_DIRS}
 )
 
-# add_library(line_follower
-#   ${PROJECT_NAME}/line_follower.cpp
+# add_library(linefollower
+#   ${PROJECT_NAME}/linefollower_18.cpp
 # )
 
-add_executable(line_follower_node line_follower_node.cpp)
+add_executable(main main.cpp linefollower_18.cpp)
 
-# add_dependencies(line_follower_node line_follower_generate_messages_cpp)
+# add_dependencies(linefollower linefollower_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(line_follower_node
+target_link_libraries(linefollower
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
 )
@@ -84,7 +84,7 @@ target_link_libraries(line_follower_node
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS line_follower line_follower_node
+# install(TARGETS linefollower linefollower
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -109,7 +109,7 @@ target_link_libraries(line_follower_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_line_follower.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_linefollower_18.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
