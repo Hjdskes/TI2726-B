@@ -20,6 +20,9 @@ class NewHardware : public ArduinoHardware {
 		};
 };
 
+/* Forward declare callback. */
+void parseTwistCb(const geometry_msgs::Twist& twist);
+
 /* Setup engines. FIXME: move to setup(). */
 int LEFT_MOTOR[] = { 6, 7, 24 };
 int RIGHT_MOTOR[] = { 2, 3, 25 };
@@ -28,12 +31,9 @@ Motor left(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
 Motor right(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
 Engine engine(&left, &right);
 
-/* Forward declare callback. */
-void parseTwistCb(const geometry_msgs::Twist& twist);
-
 /* Setup ROS. FIXME: move to setup(). */
-ros::NodeHandle<NewHardware> nh; //FIXME: _.
-ros::Subscriber<geometry_msgs::Twist> sub("/cmd_vel", &parseTwistCb);
+ros::NodeHandle<NewHardware> nh;
+ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &parseTwistCb);
 
 /* FIXME: decide best practice. */
 bool forward;
@@ -41,8 +41,6 @@ int speed;
 int angular;
 
 void setup() {
-	Serial.begin(9600);
-
 	nh.initNode();
 	nh.subscribe(sub);
 }
@@ -57,8 +55,8 @@ void loop() {
 }
 
 void parseTwistCb(const geometry_msgs::Twist& twist) {
-	forward = twist.linear.x > 0;
+	forward = true;
 	speed = 50;
-	angular = twist.angular.z;
+	angular = 0;
 }
 
