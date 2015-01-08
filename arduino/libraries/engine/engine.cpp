@@ -58,6 +58,5 @@ void Engine::move(bool forward, int speed, int angular) {
 void Engine::stop() {
 	left->stop();
 	right->stop();
-	//delay(25); // FIXME: Original code had this. (Why) Was this needed?
 }
 
