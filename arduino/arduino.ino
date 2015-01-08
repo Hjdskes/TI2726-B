@@ -14,40 +14,37 @@
 
 /* Overload the standard settings that are used
  * by ros_lib to use the specified Serial port and baud rate. */
-class NewHardware : public ArduinoHardware { 
+class ArduinoBluetooth : public ArduinoHardware { 
 	public: 
-		NewHardware() : ArduinoHardware(&Serial1, 57600) {
+		ArduinoBluetooth() : ArduinoHardware(&Serial1, 57600) {
 		};
 };
 
-/* Forward declare callback. */
-void parseTwistCb(const geometry_msgs::Twist& twist);
+Engine *engine;
+ros::NodeHandle_<ArduinoBluetooth> nh;
 
-/* Setup engines. FIXME: move to setup(). */
-int LEFT_MOTOR[] = { 6, 7, 24 };
-int RIGHT_MOTOR[] = { 2, 3, 25 };
-
-Motor left(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
-Motor right(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
-Engine engine(&left, &right);
-
-/* Setup ROS. FIXME: move to setup(). */
-ros::NodeHandle_<NewHardware> nh;
-ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &parseTwistCb);
+static void act(const geometry_msgs::Twist& twist) {
+	engine->move(twist.linear.x > 0, twist.linear.x, twist.angular.z);
+	/* FIXME: not sure if we want this... */
+	//delay(2000);
+	//engine.stop();
+}
 
 void setup() {
+	/* Setup engine. */
+	const int LEFT_MOTOR[] = { 6, 7, 24 };
+	const int RIGHT_MOTOR[] = { 2, 3, 25 };
+
+	Motor left(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
+	Motor right(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
+	engine = new Engine(&left, &right);
+
+	/* Setup ROS. */
 	nh.initNode();
-	nh.subscribe(sub);
+	ros::Subscriber<geometry_msgs::Twist> sub = nh.subscribe("cmd_vel", 5, act);
 }
 
 void loop() {
 	nh.spinOnce();
-        delay(100);
+	delay(100);
 }
-
-void parseTwistCb(const geometry_msgs::Twist& twist) {
-	engine.move(true, 50, 0);
-	delay(2000);
-	engine.stop();
-}
-
