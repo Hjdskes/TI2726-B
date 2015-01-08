@@ -32,13 +32,8 @@ Motor right(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
 Engine engine(&left, &right);
 
 /* Setup ROS. FIXME: move to setup(). */
-ros::NodeHandle<NewHardware> nh;
+ros::NodeHandle_<NewHardware> nh;
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &parseTwistCb);
-
-/* FIXME: decide best practice. */
-bool forward;
-int speed;
-int angular;
 
 void setup() {
 	nh.initNode();
@@ -46,17 +41,13 @@ void setup() {
 }
 
 void loop() {
-	engine.move(forward, speed, angular);
-	delay(2000);
-	engine.stop();
-
-	delay(2000);
 	nh.spinOnce();
+        delay(100);
 }
 
 void parseTwistCb(const geometry_msgs::Twist& twist) {
-	forward = true;
-	speed = 50;
-	angular = 0;
+	engine.move(true, 50, 0);
+	delay(2000);
+	engine.stop();
 }
 
