@@ -41,6 +41,10 @@ class Engine {
 		 * Stops the engine.
 		 */
 		void stop();
+		/**
+		 * Returns true iff this engine is currently stopped.
+		 */
+		bool isStopped();
 
 	private:
 		Motor *left;

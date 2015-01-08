@@ -44,3 +44,7 @@ void Motor::start() {
 void Motor::stop() {
 	digitalWrite(this->en, LOW);
 }
+
+bool Motor::isStopped() {
+	return digitalRead(this->en) == LOW;
+}

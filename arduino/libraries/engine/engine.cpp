@@ -65,3 +65,6 @@ void Engine::stop() {
 	right->stop();
 }
 
+bool Engine::isStopped() {
+	return (left->isStopped() && right->isStopped());
+}

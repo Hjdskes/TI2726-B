@@ -38,6 +38,10 @@ class Motor {
 		 * Stops this motor.
 		 */
 		void stop();
+		/**
+		 * Returns true iff this motor is currently stopped.
+		 */
+		bool isStopped();
 
 	private:
 		int fwd;
