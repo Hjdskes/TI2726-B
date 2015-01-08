@@ -31,6 +31,10 @@ class Motor {
 		 */
 		void backward(int speed);
 		/**
+		 * Starts this motor.
+		 */
+		void start();
+		/**
 		 * Stops this motor.
 		 */
 		void stop();

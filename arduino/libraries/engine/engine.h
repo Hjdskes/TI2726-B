@@ -13,8 +13,8 @@
 class Motor;
 
 /**
- * This class represent the actual engine in totality. It makes use of two Motor
- * instances; one for the left motor and one for the right motor.
+ * This class represents the actual engine in totality. It makes use of two
+ * Motor instances; one for the left motor and one for the right motor.
  *
  * Speeds are taken as percentages and thus should be between 0 and 100
  * inclusive.
@@ -34,16 +34,22 @@ class Engine {
 		 */
 		void move(bool forward, int speed, int angular);
 		/**
-		 * Stops the robot.
+		 * Starts the engine.
+		 */
+		void start();
+		/**
+		 * Stops the engine.
 		 */
 		void stop();
 
 	private:
 		Motor *left;
 		Motor *right;
+
 		void moveForward(int speed);
 		void moveBackward(int speed);
 		void turnLeft(int speed);
 		void turnRight(int speed);
 };
+
 #endif /* _ENGINE_H_ */

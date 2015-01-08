@@ -13,7 +13,7 @@ Motor::Motor(int fwd, int rev, int en) : fwd(fwd), rev(rev), en(en) {
 	pinMode(fwd, OUTPUT);
 	pinMode(rev, OUTPUT);
 	pinMode(en, OUTPUT);
-	digitalWrite(en, HIGH);
+	this->start();
 }
 
 /**
@@ -27,18 +27,20 @@ static int getPWMValue(int speed) {
 
 void Motor::forward(int speed) {
 	int pwm = getPWMValue(speed);
-	analogWrite(this->rev, 0); // FIXME: needed?
+	digitalWrite(this->rev, LOW); // FIXME: needed?
 	analogWrite(this->fwd, pwm);
 }
 
 void Motor::backward(int speed) {
 	int pwm = getPWMValue(speed);
-	analogWrite(this->fwd, 0); // FIXME: needed?
+	digitalWrite(this->fwd, LOW); // FIXME: needed?
 	analogWrite(this->rev, pwm);
 }
 
+void Motor::start() {
+	digitalWrite(this->en, HIGH);
+}
+
 void Motor::stop() {
-	// FIXME: ENABLE pin?
-	analogWrite(this->fwd, 0);
-	analogWrite(this->rev, 0);
+	digitalWrite(this->en, LOW);
 }

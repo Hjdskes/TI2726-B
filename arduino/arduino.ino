@@ -12,6 +12,11 @@
 #include "engine.h"
 #include "motor.h"
 
+/* TODO: stop when no messages have been received for some time.
+   TODO: add a timer to the sketch to make the motor control interrupt based?
+   TODO: stop when the proximity sensor senses an object nearby.
+*/
+
 /* Overload the standard settings that are used
  * by ros_lib to use the specified Serial port and baud rate. */
 class ArduinoBluetooth : public ArduinoHardware { 
@@ -31,13 +36,18 @@ static void act(const geometry_msgs::Twist& twist) {
 }
 
 void setup() {
-	/* Setup engine. */
 	const int LEFT_MOTOR[] = { 6, 7, 24 };
 	const int RIGHT_MOTOR[] = { 2, 3, 25 };
+	const int SENSOR[] = { 22, 23 };
 
+	/* Setup engine. */
 	Motor left(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
 	Motor right(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
 	engine = new Engine(&left, &right);
+
+	/* Setup proximity sensor. */
+	Sensor sensor(engine, SENSOR[1], SENSOR[0]);
+	// TODO: add a timer so it does its thing!
 
 	/* Setup ROS. */
 	nh.initNode();

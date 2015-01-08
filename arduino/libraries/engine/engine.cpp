@@ -55,6 +55,11 @@ void Engine::move(bool forward, int speed, int angular) {
 	}
 }
 
+void Engine::start() {
+	left->start();
+	right->start();
+}
+
 void Engine::stop() {
 	left->stop();
 	right->stop();
