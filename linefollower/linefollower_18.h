@@ -19,6 +19,7 @@ class LineFollower {
 		ros::NodeHandle nh;
 		image_transport::ImageTransport it;
 		image_transport::Subscriber image_sub;
+		void imageCallback(const sensor_msgs::ImageConstPtr& color_img);
 };
 
 #endif /* _LINEFOLLOWER_H_ */

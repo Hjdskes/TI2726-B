@@ -14,7 +14,16 @@
 
 #include "linefollower_18.h"
 
-static void imageCallback(const sensor_msgs::ImageConstPtr& color_img) {
+// FIXME: ik wil nog steeds weten hoe het met die it(nh) zit :p
+LineFollower::LineFollower() : it(nh) {
+    /* Set compress image stream enabled. */
+    image_transport::TransportHints hints("compressed", ros::TransportHints());
+
+	/* Subscribe to input channel. */
+    image_sub = it.subscribe("/camera/image", 1, &LineFollower::imageCallback, this, hints);
+}
+
+void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& color_img) {
 	// convert ROS image stream to OpenCV image, using color channels BGR (8-bit)
 	cv_bridge::CvImagePtr img_ptr;
 	cv::Mat img_bgr;
@@ -54,7 +63,7 @@ static void imageCallback(const sensor_msgs::ImageConstPtr& color_img) {
 	double theta = CV_PI/180;
 	unsigned int min_intersects = 50;
 	unsigned int min_points = 22;
-	unsigned int max_gap = 10;
+	unsigned int max_gap = 50;
 	cv::HoughLinesP(img_edges, lines, r, theta, min_intersects, 
 		min_points, max_gap);
 
@@ -75,13 +84,12 @@ static void imageCallback(const sensor_msgs::ImageConstPtr& color_img) {
 	/* Show result. */
 	cv::imshow("Detected line image", img_detected);
 	cv::waitKey(3);	
+
 }
 
-// FIXME: ik wil nog steeds weten hoe het met die it(nh) zit :p
-LineFollower::LineFollower() : it(nh) {
-    /* Set compress image stream enabled. */
-    image_transport::TransportHints hints("compressed", ros::TransportHints());
-
-	/* Subscribe to input channel. */
-    image_sub = it.subscribe("/camera/image", 1, &imageCallback, this, hints);
+int main(int argc, char** argv) {
+	ros::init(argc, argv, "image_stream");
+	LineFollower lf;
+	ros::spin();
+	return 0;
 }
