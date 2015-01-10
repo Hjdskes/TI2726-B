@@ -9,6 +9,16 @@
 #ifndef _SENSOR_H_
 #define _SENSOR_H_
 
+/* The maximum sensor distance worth checking.
+ * FIXME: not sure if this is the proper distance. */
+const unsigned int MAX_DISTANCE = 12;
+/* Divide by this to receive distance in cm. */ 
+const float PULSE_DIVIDE = 58.0;
+/* The maximum time delay in μs worth waiting. */
+const unsigned int MAX_DELAY = (MAX_DISTANCE + 1) * PULSE_DIVIDE;
+/* The trigger pulse needs to be at least 10 μs long. */
+const unsigned int MIN_PULSE_LENGTH = 10;
+
 /* Forward declaration. */
 class Engine;
 
@@ -25,6 +35,16 @@ class Sensor {
 		 * It takes care of initialising the pinModes itself.
 		 */
 		Sensor(Engine *engine, int trigger, int echo);
+		/**
+		 * Generates a pulse. Implicitly sets the ECHO pin to HIGH.
+		 * FIXME: verify the above!
+		 */
+		void generatePulse();
+		/**
+		 * Controls the sensor. It processes the data and detects obstacles,
+		 * stopping the engine when needed.
+		 */
+		void poll();
 
 	private:
 		Engine *engine;
@@ -32,18 +52,15 @@ class Sensor {
 		int echo;
 
 		/**
-		 * Generates a pulse. Implicitly sets the ECHO pin to HIGH.
+		 * Receives a pulse. The returned value is the pulse duration in μs.
 		 */
-		void generatePulse();
-		/**
-		 * Receives a pulse. The returned value is the duration in μs.
-		 */
-		long receivePulse();
-		/**
-		 * Controls the sensor. It calls generate- and receivePulse to detect
-		 * obstacles, stopping the engine when needed.
-		 */
-		void poll();
+		unsigned long receivePulse();
 };
+
+/* Accessor, so that the ISR in sensor.cpp can access the sensor object declared
+ * in the sketch. Because this is extern (instead of controlling it from within
+ * the Sensor class), the user of the class is in control and as such, it is not
+ * up to us anymore to enforce only one instance at a time. */
+extern Sensor *sensor;
 
 #endif /* _SENSOR_H_ */

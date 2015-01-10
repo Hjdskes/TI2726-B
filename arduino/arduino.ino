@@ -11,6 +11,7 @@
 
 #include "engine.h"
 #include "motor.h"
+#include "sensor.h"
 
 /* TODO: stop when no messages have been received for some time.
    TODO: add a timer to the sketch to make the motor control interrupt based?
@@ -25,14 +26,12 @@ class ArduinoBluetooth : public ArduinoHardware {
 		};
 };
 
-Engine *engine;
+Engine *engine = NULL;
+Sensor *sensor = NULL;
 ros::NodeHandle_<ArduinoBluetooth> nh;
 
 static void act(const geometry_msgs::Twist& twist) {
 	engine->move(twist.linear.x > 0, twist.linear.x, twist.angular.z);
-	/* FIXME: not sure if we want this... */
-	//delay(2000);
-	//engine.stop();
 }
 
 void setup() {
@@ -46,8 +45,7 @@ void setup() {
 	engine = new Engine(&left, &right);
 
 	/* Setup proximity sensor. */
-	Sensor sensor(engine, SENSOR[1], SENSOR[0]);
-	// TODO: add a timer so it does its thing!
+	sensor = new Sensor(engine, SENSOR[1], SENSOR[0]);
 
 	/* Setup ROS. */
 	nh.initNode();
@@ -55,6 +53,7 @@ void setup() {
 }
 
 void loop() {
+	sensor.poll();
 	nh.spinOnce();
 	delay(100);
 }
