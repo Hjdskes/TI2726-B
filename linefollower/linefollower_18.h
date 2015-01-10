@@ -15,16 +15,18 @@
 class LineFollower {
 	public:
 		LineFollower();
-		const char* determineDirection(cv::Mat& img);
+		const char* findDirection(std::vector<cv::Vec4i>& lines);
 
 	private:
 		ros::NodeHandle nh;
 		image_transport::ImageTransport it;
 		image_transport::Subscriber image_sub;
 		void imageCallback(const sensor_msgs::ImageConstPtr& color_img);
-		void findBestRowCol(cv::Mat img, int& best_row, int& best_col, int& row_red, int& col_red);
-		void updateRedCount(uint8_t red, unsigned int& count);
-		cv::Mat translateImage(cv::Mat& img, int x, int y);
+		void toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest);
+		void toBinary(cv::Mat& src, cv::Mat& dest);
+		void toCanny(cv::Mat& src, cv::Mat& dest);
+		void toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines);	
+		void drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines);
 };
 
 #endif /* _LINEFOLLOWER_H_ */
