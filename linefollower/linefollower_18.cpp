@@ -29,7 +29,7 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	std::vector<cv::Vec4i> lines;
 	
 	/* Convert ROS image to an OpenCV BGR image */
-	toCVImg(img, bgr_img);
+	if (!toCVImg(img, bgr_img)) return;
 	/* Transpose and flip image so it is oriented properly */
 	cv::transpose(bgr_img, bgr_img);
 	cv::flip(bgr_img, bgr_img, 1);
@@ -55,16 +55,17 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	cv::waitKey(3);
 }
 
-void LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest) {
+bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest) {
 	/* convert ROS image stream to OpenCV image, using color channels BGR (8-bit) */
 	cv_bridge::CvImagePtr img_ptr;
 	try {
 		img_ptr = cv_bridge::toCvCopy(src, 
 			sensor_msgs::image_encodings::BGR8);
 		dest = img_ptr->image;
+		return true;
 	} catch (cv_bridge::Exception& e) {
 		ROS_ERROR("cv_bridge exception: %s", e.what());
-		std::exit(1);
+		return false;
     }
 }
 

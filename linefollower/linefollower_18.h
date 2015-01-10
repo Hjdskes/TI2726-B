@@ -22,7 +22,7 @@ class LineFollower {
 		image_transport::ImageTransport it;
 		image_transport::Subscriber image_sub;
 		void imageCallback(const sensor_msgs::ImageConstPtr& color_img);
-		void toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest);
+		bool toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest);
 		void toBinary(cv::Mat& src, cv::Mat& dest);
 		void toCanny(cv::Mat& src, cv::Mat& dest);
 		void toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines);	
