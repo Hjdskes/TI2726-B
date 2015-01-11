@@ -20,43 +20,50 @@ LineFollower::LineFollower() : it(nh) {
 
 	/* Subscribe to input channel. */
     image_sub = it.subscribe("/camera/image", 1, &LineFollower::imageCallback, this, hints);
+
+	/* Init globals needed for averaging calculated direction. */
+	cb_count = 0;
+	calc_dirs = 0;
 }
 
 void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
-	/* Declare all images needed */
+	/* Declare all images needed. */
 	cv::Mat bgr_img, bin_img, edge_img;
-	/* Create a vector to save detected lines */
+	/* Create a vector to save detected lines. */
 	std::vector<cv::Vec4i> lines;
 	
-	/* Convert ROS image to an OpenCV BGR image */
+	/* Convert ROS image to an OpenCV BGR image. */
 	if (!toCVImg(img, bgr_img)) return;
-	/* Transpose and flip image so it is oriented properly */
+
+	/* Crop the image to only look at close lines. */
+	bgr_img = cv::Mat(bgr_img, cv::Rect(960, 60, 960, 960));
+	/* Transpose and flip the image so it is oriented properly. */
 	cv::transpose(bgr_img, bgr_img);
 	cv::flip(bgr_img, bgr_img, 1);
-
-	/* Convert the BGR image to a binary image */
+ 
+	/* Convert the BGR image to a binary image. */
 	toBinary(bgr_img, bin_img);
 
-	/* Perform edge detection */
+	/* Perform edge detection. */
 	toCanny(bin_img, edge_img);   
 
-	/* Perform line detection */
+	/* Perform line detection. */
 	toHough(edge_img, lines); 
 
-	/* Draw lines detected with Hough */
+	/* Extract the best direction from the lines. */
+	bestDirection(lines);
+
+	/* Code below is for debugging purposes only.
+	/* Draw lines detected with Hough.
 	drawDetectedLines(bgr_img, lines);
-
-	/* Temporarily print found direction */
-	ROS_INFO("%s", findDirection(lines));
-
-	/* Resize image to suitable size and show the result. */
-	cv::resize(bgr_img, bgr_img, cv::Size(540, 960));
+	/* Resize image to suitable size and show the result.
+	cv::resize(bgr_img, bgr_img, cv::Size(540, 540));
 	cv::imshow("Detected line image", bgr_img);
-	cv::waitKey(3);
+	cv::waitKey(3); */
 }
 
 bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest) {
-	/* convert ROS image stream to OpenCV image, using color channels BGR (8-bit) */
+	/* Convert ROS image stream to OpenCV image, using color channels BGR (8-bit). */
 	cv_bridge::CvImagePtr img_ptr;
 	try {
 		img_ptr = cv_bridge::toCvCopy(src, 
@@ -70,26 +77,26 @@ bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest)
 }
 
 void LineFollower::toBinary(cv::Mat& src, cv::Mat& dest) {
-	/*BGR. adjust for different color detection. */
+	/*BGR. Adjust for different color detection. */
 	/* FIXME: find perfect values */
 	cv::Scalar min_vals(0, 100, 0);
 	cv::Scalar max_vals(200, 200, 200);
-	/* create binary image from the bgr image */
+	/* Create a binary image from the BGR image. */
 	cv::inRange(src, min_vals, max_vals, dest);
 }
 
 void LineFollower::toCanny(cv::Mat& src, cv::Mat& dest) {
-	/* blur img. Needed for detecting edges */
+	/* Blur img. Needed for detecting edges. */
 	unsigned int kernel_size = 3;
 	cv::blur(src, dest, cv::Size(kernel_size, kernel_size));
 
-	/* detect edges */
+	/* Detect edges. */
 	double low_thr = 40; /* lower threshold */
 	cv::Canny(dest, dest, low_thr, 4*low_thr, kernel_size);
 }
 
 void LineFollower::toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines) {
-	/* Hough transform. Saves detected lines in vector 'lines'
+	/* Hough transform. Saves detected lines in vector 'lines'.
 	FIXME: find perfect values */
 	double r = 1;
 	double theta = CV_PI/180; /* max angle */
@@ -101,21 +108,20 @@ void LineFollower::toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines) {
 }
 
 void LineFollower::drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines) {
-	//FIXME: needed?
 	cv::Scalar line_color(0,0,255);
 	unsigned int line_width = 3;
 
 	for (size_t i = 0; i < lines.size(); i++) {
-		/* add each seperate line to the image */
+		/* Add each seperate line to the image. */
 		cv::Point point1(lines[i][0], lines[i][1]);
 		cv::Point point2(lines[i][2], lines[i][3]);
-		/* draw anti-aliased lines */
+		/* Draw anti-aliased lines. */
 		cv::line(img, point1, point2, line_color, 
 			line_width, CV_AA);
 	}
 }
 
-const char* LineFollower::findDirection(std::vector<cv::Vec4i>& lines) {
+int LineFollower::findDirection(std::vector<cv::Vec4i>& lines) {
 	/* Keep track of the maximum horizontal and vertical length. */
 	unsigned int max_h = 0;
 	unsigned int max_v = 0;
@@ -125,28 +131,54 @@ const char* LineFollower::findDirection(std::vector<cv::Vec4i>& lines) {
 	for (int i = 0; i < lines.size(); i++) {
 		cv::Vec4i line = lines.at(i);
 
-		int h = abs(line[0] - line[2]);
+		int h = abs(line[2] - line[0]);
 		if (h > max_h) {
 			max_h = h;
 			max_line = line;
 		}
 
-		int v = abs(line[1] - line[3]);
+		int v = abs(line[3] - line[1]);
 		if (v > max_v) {
 			max_v = v; 
 		}
 	}
 
-	/* Calculate the angle between the longest line and the x-axis */
+	/* Calculate the angle between the longest line and the x-axis. */
 	double angle = atan2(max_line[3] - max_line[1], max_line[2] - max_line[0]);
 	if (max_v > max_h) {
-		return "forward";
+		return 0;
 	/* FIXME: tweak */
-	} else if (angle > .2) {
-		return "left";
+	} else if (angle > .1) {
+		return -1;
 	} else {
-		return "right";	
+		return 1;	
 	}
+}
+
+void LineFollower::bestDirection(std::vector<cv::Vec4i>& lines) {
+	/* Add the calculated direction to the direction total. */
+	calc_dirs += findDirection(lines);
+	/* The callback has been called another time, so increment the counter. */
+	cb_count++;
+	/* Only return a direction if the callback has been run 5 times. */
+	if (cb_count < 5) {
+		return;
+	}
+
+	const char* dir;
+	if (calc_dirs > 2) {
+		dir = "right";
+	} else if (calc_dirs < -2) {
+		dir = "left";
+	} else {
+		dir = "forward";
+	}
+	/* TODO: use Twist */
+	ROS_INFO("%d, %s", calc_dirs, dir);
+	
+	/* Reset the globals. */
+	calc_dirs = 0;
+	cb_count = 0;
 }
 
 int main(int argc, char** argv) {
