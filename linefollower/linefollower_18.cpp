@@ -17,21 +17,21 @@
 
 /* Constants used for binary conversion.
  * BGR. Adjust for different color detection. */
-const cv::Scalar MIN_VALS(0, 100, 0);
-const cv::Scalar MAX_VALS(200, 200, 200);
+static const cv::Scalar MIN_VALS(0, 100, 0);
+static const cv::Scalar MAX_VALS(200, 200, 200);
 
 /* Constants used for edge detection. */
-const uint8_t KERNEL_SIZE = 3;
-const uint8_t LOW_THR = 40;
+static const uint8_t KERNEL_SIZE = 3;
+static const uint8_t LOW_THR = 40;
 
 /* Direction constants. */
-const uint8_t FORWARD = 0;
-const uint8_t RIGHT = 1;
-const int8_t LEFT = -1;
+static const uint8_t FORWARD = 0;
+static const uint8_t RIGHT = 1;
+static const int8_t LEFT = -1;
 
 /* Speed constants. */
-const uint8_t FW_SPEED = 100;
-const uint8_t TURN_SPEED = 40;
+static const uint8_t FW_SPEED = 100;
+static const uint8_t TURN_SPEED = 40;
 
 LineFollower::LineFollower() : it(nh) {
     /* Set compress image stream enabled. */
