@@ -15,6 +15,24 @@
 
 #include "linefollower_18.h"
 
+/* Constants used for binary conversion.
+ * BGR. Adjust for different color detection. */
+const cv::Scalar MIN_VALS(0, 100, 0);
+const cv::Scalar MAX_VALS(200, 200, 200);
+
+/* Constants used for edge detection. */
+const uint8_t KERNEL_SIZE = 3;
+const uint8_t LOW_THR = 40;
+
+/* Direction constants. */
+const uint8_t FORWARD = 0;
+const uint8_t RIGHT = 1;
+const int8_t LEFT = -1;
+
+/* Speed constants. */
+const uint8_t FW_SPEED = 100;
+const uint8_t TURN_SPEED = 40;
+
 LineFollower::LineFollower() : it(nh) {
     /* Set compress image stream enabled. */
     image_transport::TransportHints hints("compressed", ros::TransportHints());
@@ -22,6 +40,7 @@ LineFollower::LineFollower() : it(nh) {
 	/* Subscribe to input channel. */
     image_sub = it.subscribe("/camera/image", 1, &LineFollower::imageCallback, this, hints);
 
+	/* Publish to /cmd_vel. */
 	twist_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
 	/* Init globals needed for averaging calculated direction. */
@@ -56,9 +75,11 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	/* Extract the best direction from the lines. */
 	bestDirection(lines);
 
-	/* Code below is for debugging purposes only.
+	/* Code below is for debugging purposes only.*/
+
 	/* Draw lines detected with Hough.
 	drawDetectedLines(bgr_img, lines);
+
 	/* Resize image to suitable size and show the result.
 	cv::resize(bgr_img, bgr_img, cv::Size(540, 540));
 	cv::imshow("Detected line image", bgr_img);
@@ -80,34 +101,24 @@ bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest)
 }
 
 void LineFollower::toBinary(cv::Mat& src, cv::Mat& dest) {
-	/*BGR. Adjust for different color detection. */
-	/* FIXME: find perfect values */
-	cv::Scalar min_vals(0, 100, 0);
-	cv::Scalar max_vals(200, 200, 200);
 	/* Create a binary image from the BGR image. */
-	cv::inRange(src, min_vals, max_vals, dest);
+	cv::inRange(src, MIN_VALS, MAX_VALS, dest);
 }
 
 void LineFollower::toCanny(cv::Mat& src, cv::Mat& dest) {
 	/* Blur img. Needed for detecting edges. */
-	unsigned int kernel_size = 3;
-	cv::blur(src, dest, cv::Size(kernel_size, kernel_size));
+	cv::blur(src, dest, cv::Size(KERNEL_SIZE, KERNEL_SIZE));
 
 	/* Detect edges. */
-	double low_thr = 40; /* lower threshold */
-	cv::Canny(dest, dest, low_thr, 4*low_thr, kernel_size);
+	cv::Canny(dest, dest, LOW_THR, 4*LOW_THR, KERNEL_SIZE);
 }
 
 void LineFollower::toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines) {
 	/* Hough transform. Saves detected lines in vector 'lines'.
-	FIXME: find perfect values */
-	double r = 1;
-	double theta = CV_PI/180; /* max angle */
-	unsigned int min_intersects = 50; /* mininum line intersections */
-	unsigned int min_points = 30; /* minimum points */
-	unsigned int max_gap = 10; /* maximum gap for lines to be connected */
-	cv::HoughLinesP(src, lines, r, theta, min_intersects, 
-		min_points, max_gap);
+	 * FIXME: find perfect values
+	 * http://docs.opencv.org/modules/imgproc/doc/feature_detection.html?highlight=houghlinesp#houghlinesp 
+	 */ 
+	cv::HoughLinesP(src, lines, 1, CV_PI/180, 50, 30, 10);
 }
 
 void LineFollower::drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines) {
@@ -119,42 +130,38 @@ void LineFollower::drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines
 		cv::Point point1(lines[i][0], lines[i][1]);
 		cv::Point point2(lines[i][2], lines[i][3]);
 		/* Draw anti-aliased lines. */
-		cv::line(img, point1, point2, line_color, 
-			line_width, CV_AA);
+		cv::line(img, point1, point2, line_color, line_width, CV_AA);
 	}
 }
 
 int LineFollower::findDirection(std::vector<cv::Vec4i>& lines) {
-	/* Keep track of the maximum horizontal and vertical length. */
-	unsigned int max_h = 0;
-	unsigned int max_v = 0;
-	cv::Vec4i max_line;
+	max_h = 0;
+	max_v = 0;
 
 	/* Loop through all lines and find the longest one. */
-	for (int i = 0; i < lines.size(); i++) {
+	for (uint8_t i = 0; i < lines.size(); i++) {
 		cv::Vec4i line = lines.at(i);
 
-		int h = abs(line[2] - line[0]);
+		uint16_t h = abs(line[2] - line[0]);
 		if (h > max_h) {
 			max_h = h;
 			max_line = line;
 		}
 
-		int v = abs(line[3] - line[1]);
+		uint16_t v = abs(line[3] - line[1]);
 		if (v > max_v) {
 			max_v = v; 
 		}
 	}
 
 	/* Calculate the angle between the longest line and the x-axis. */
-	double angle = atan2(max_line[3] - max_line[1], max_line[2] - max_line[0]);
+	float angle = atan2(max_line[3] - max_line[1], max_line[2] - max_line[0]);
 	if (max_v > max_h) {
-		return 0;
-	/* FIXME: tweak */
+		return FORWARD;
 	} else if (angle > .1) {
-		return -1;
+		return LEFT;
 	} else {
-		return 1;	
+		return RIGHT;	
 	}
 }
 
@@ -169,14 +176,15 @@ void LineFollower::bestDirection(std::vector<cv::Vec4i>& lines) {
 	}
 
 	if (calc_dirs > 2) {
-		generateTwist(1);	
+		generateTwist(RIGHT);	
 	} else if (calc_dirs < -2) {
-		generateTwist(-1);
+		generateTwist(LEFT);
 	} else {
-		generateTwist(0);
+		generateTwist(FORWARD);
 	}
 
-	ROS_INFO("> 2: right, < -2: left, else forward: %d", calc_dirs);
+	/* Only activate for debugging.
+	ROS_INFO("> 2: right, < -2: left, else forward: %d", calc_dirs); */
 	
 	/* Reset the globals. */
 	calc_dirs = 0;
@@ -187,7 +195,7 @@ void LineFollower::generateTwist(int dir) {
 	/* Create and publish a Twist message indicating the speed and direction. */
 	geometry_msgs::Twist twist;
     twist.angular.z = dir;
-    twist.linear.x = dir == 0 ? 100 : 40;
+    twist.linear.x = dir == 0 ? FW_SPEED : TURN_SPEED;
 	twist_pub.publish(twist);
 }
 

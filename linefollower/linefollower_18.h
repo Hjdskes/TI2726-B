@@ -13,6 +13,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 class LineFollower {
+
 	public:
 		LineFollower();
 
@@ -26,6 +27,12 @@ class LineFollower {
 		uint8_t cb_count;
 		/* Global used to keep track of the best directions while not averaging. */
 		int calc_dirs;
+	
+		/* Globals used to detect the longest horizontal and vertical lines */
+		unsigned int max_h;
+		unsigned int max_v;
+		/* Global used for storing the coordinates of the longest line. */
+		cv::Vec4i max_line;
 
 		void imageCallback(const sensor_msgs::ImageConstPtr& color_img);
 		bool toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest);
