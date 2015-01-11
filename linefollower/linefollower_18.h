@@ -18,6 +18,7 @@ class LineFollower {
 
 	private:
 		ros::NodeHandle nh;
+		ros::Publisher twist_pub;
 		image_transport::ImageTransport it;
 		image_transport::Subscriber image_sub;
 
@@ -34,6 +35,7 @@ class LineFollower {
 		void drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines);
 		int findDirection(std::vector<cv::Vec4i>& lines);
 		void bestDirection(std::vector<cv::Vec4i>& lines);
+		void generateTwist(int dir);
 };
 
 #endif /* _LINEFOLLOWER_H_ */

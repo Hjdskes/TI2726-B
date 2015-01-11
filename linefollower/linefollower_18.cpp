@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -20,6 +21,8 @@ LineFollower::LineFollower() : it(nh) {
 
 	/* Subscribe to input channel. */
     image_sub = it.subscribe("/camera/image", 1, &LineFollower::imageCallback, this, hints);
+
+	twist_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
 	/* Init globals needed for averaging calculated direction. */
 	cb_count = 0;
@@ -165,20 +168,27 @@ void LineFollower::bestDirection(std::vector<cv::Vec4i>& lines) {
 		return;
 	}
 
-	const char* dir;
 	if (calc_dirs > 2) {
-		dir = "right";
+		generateTwist(1);	
 	} else if (calc_dirs < -2) {
-		dir = "left";
+		generateTwist(-1);
 	} else {
-		dir = "forward";
+		generateTwist(0);
 	}
-	/* TODO: use Twist */
-	ROS_INFO("%d, %s", calc_dirs, dir);
+
+	ROS_INFO("> 2: right, < -2: left, else forward: %d", calc_dirs);
 	
 	/* Reset the globals. */
 	calc_dirs = 0;
 	cb_count = 0;
+}
+
+void LineFollower::generateTwist(int dir) {
+	/* Create and publish a Twist message indicating the speed and direction. */
+	geometry_msgs::Twist twist;
+    twist.angular.z = dir;
+    twist.linear.x = dir == 0 ? 100 : 40;
+	twist_pub.publish(twist);
 }
 
 int main(int argc, char** argv) {
