@@ -9,16 +9,6 @@
 #ifndef _SENSOR_H_
 #define _SENSOR_H_
 
-/* The maximum sensor distance worth checking.
- * FIXME: not sure if this is the proper distance. */
-const unsigned int MAX_DISTANCE = 12;
-/* Divide by this to receive distance in cm. */ 
-const float PULSE_DIVIDE = 58.0;
-/* The maximum time delay in μs worth waiting. */
-const unsigned int MAX_DELAY = (MAX_DISTANCE + 1) * PULSE_DIVIDE;
-/* The trigger pulse needs to be at least 10 μs long. */
-const unsigned int MIN_PULSE_LENGTH = 10;
-
 /* Forward declaration. */
 class Engine;
 
@@ -32,7 +22,8 @@ class Sensor {
 		/**
 		 * Constructs a new Sensor instance, to poll for objects and
 		 * stop/start the engine appropriately.
-		 * It takes care of initialising the pinModes itself.
+		 * It takes care of initialising the pinModes itself and configures
+		 * Timer1 for its own use.
 		 */
 		Sensor(Engine *engine, int trigger, int echo);
 		/**

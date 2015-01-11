@@ -10,6 +10,16 @@
 #include "engine.h"
 #include "Arduino.h"
 
+/* The maximum sensor distance worth checking.
+ * FIXME: not sure if this is the proper distance. */
+static const unsigned int MAX_DISTANCE = 12;
+/* Divide by this to receive distance in cm. */ 
+static const float PULSE_DIVIDE = 58.0;
+/* The maximum time delay in μs worth waiting. */
+static const unsigned int MAX_DELAY = (MAX_DISTANCE + 1) * PULSE_DIVIDE;
+/* The trigger pulse needs to be at least 10 μs long. */
+static const unsigned int MIN_PULSE_LENGTH = 10;
+
 /**
  * From the HC-SR04 datasheet
  * (http://www.electroschematics.com/wp-content/uploads/2013/07/HC-SR04-datasheet-version-2.pdf):
