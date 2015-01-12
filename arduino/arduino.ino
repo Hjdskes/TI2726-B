@@ -70,7 +70,7 @@ void setup() {
 
 	/* Setup ROS. */
 	nh.initNode();
-	ros::Subscriber<geometry_msgs::Twist> sub = nh.subscribe("cmd_vel", 5, act);
+	nh.subscribe("cmd_vel", 5, act);
 }
 
 ISR(TIMER5_COMPA_vect) {
