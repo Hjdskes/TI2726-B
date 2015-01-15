@@ -25,7 +25,7 @@ class Sensor {
 		 * It takes care of initialising the pinModes itself and configures
 		 * Timer1 for its own use.
 		 */
-		Sensor(Engine *engine, int trigger, int echo);
+		Sensor(const Engine *engine, const int trigger, const int echo);
 		/**
 		 * Generates a pulse.
 		 */
@@ -38,9 +38,9 @@ class Sensor {
 		bool poll();
 
 	private:
-		Engine *engine;
-		int trigger;
-		int echo;
+		const Engine *engine;
+		const int trigger;
+		const int echo;
 
 		/**
 		 * Receives a pulse. The returned value is the pulse duration in μs.

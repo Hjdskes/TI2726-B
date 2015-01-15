@@ -21,15 +21,15 @@ class Motor {
 		 * Constructs a new motor instance that will use the supplied pin layout.
 		 * It takes care of initialising the pinModes itself.
 		 */
-		Motor(int fwd, int rev, int en);
+		Motor(const int fwd, const int rev, const int en);
 		/**
 		 * Makes this motor go forward, using the given speed.
 		 */
-		void forward(int speed);
+		void forward(const int speed);
 		/**
 		 * Makes this motor go backward, using the given speed.
 		 */
-		void backward(int speed);
+		void backward(const int speed);
 		/**
 		 * Starts this motor.
 		 */
@@ -44,9 +44,9 @@ class Motor {
 		bool isStopped();
 
 	private:
-		int fwd;
-		int rev;
-		int en;
+		const int fwd;
+		const int rev;
+		const int en;
 };
 
 #endif /* _MOTOR_H_ */

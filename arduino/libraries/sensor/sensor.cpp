@@ -34,7 +34,7 @@ static const unsigned int MIN_PULSE_LENGTH = 10;
  * no obstacle is detected, the output pin will give a 38ms high level signal.
  */
 
-Sensor::Sensor(Engine *engine, int trigger, int echo) : engine(engine), trigger(trigger), echo(echo) {
+Sensor::Sensor(const Engine *engine, const int trigger, const int echo) : engine(engine), trigger(trigger), echo(echo) {
 	pinMode(trigger, OUTPUT);
 	pinMode(echo, INPUT);
 

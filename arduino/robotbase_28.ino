@@ -13,6 +13,11 @@
 #include "motor.h"
 #include "sensor.h"
 
+/*
+	TODO: motor timer met hoeksnelheid
+	TODO: uint8_t etc waar mogelijk? wat gebeurt er dan in getPWMValue?
+*/
+
 /* Overload the standard settings that are used
  * by ros_lib to use the specified Serial port and baud rate. */
 class ArduinoBluetooth : public ArduinoHardware { 
@@ -41,7 +46,7 @@ void setup() {
 	const int RIGHT_MOTOR[] = { 2, 3, 25 };
 	const int SENSOR[] = { 22, 23 };
 
-	/* Setup Timer5 to reliably fire a interrupt every second.
+	/* Configure Timer5 to reliably fire an interrupt every second.
 	 *
 	 * To do so, our value in the compare match register must be:
 	 * (16000000 / (256 * 1)) - 1 = 62499, where 16000000 is the Arduino
