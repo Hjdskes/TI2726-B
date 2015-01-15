@@ -27,8 +27,7 @@ class Sensor {
 		 */
 		Sensor(Engine *engine, int trigger, int echo);
 		/**
-		 * Generates a pulse. Implicitly sets the ECHO pin to HIGH.
-		 * FIXME: verify the above!
+		 * Generates a pulse.
 		 */
 		void generatePulse();
 		/**
