@@ -9,7 +9,7 @@
 #include "engine.h"
 #include "motor.h"
 
-Engine::Engine(const Motor *left, const Motor *right) : left(left), right(right) {
+Engine::Engine(Motor *left, Motor *right) : left(left), right(right) {
 }
 
 void Engine::moveForward(const int speed) {

@@ -27,7 +27,7 @@ class Engine {
 		/**
 		 * Constructs a new Engine instance, to control both Motors.
 		 */
-		Engine(const Motor *left, const Motor *right);
+		Engine(Motor *left, Motor *right);
 		/**
 		 * Makes the robot move in the specified direction, using the given speed and angular value.
 		 * Setting forward to true means forward movement, whereas false means backward.
@@ -47,8 +47,8 @@ class Engine {
 		bool isStopped();
 
 	private:
-		const Motor *left;
-		const Motor *right;
+		Motor *left;
+		Motor *right;
 
 		void moveForward(const int speed);
 		void moveBackward(const int speed);
