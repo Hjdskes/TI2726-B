@@ -24,7 +24,6 @@ class ArduinoBluetooth : public ArduinoHardware {
 Engine *engine = NULL;
 Sensor *sensor = NULL;
 ros::NodeHandle_<ArduinoBluetooth> nh;
-int isStoppedBySensor;
 
 static void act(const geometry_msgs::Twist& twist) {
 	/* Reset counter upon processing ROS message. */
@@ -64,15 +63,14 @@ void setup() {
 	/* Setup engine. */
 	Motor *left = new Motor(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
 	Motor *right = new Motor(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
-	engine = new Engine(left, right);  
+	engine = new Engine(left, right);
 
 	/* Setup proximity sensor. */
 	sensor = new Sensor(engine, SENSOR[1], SENSOR[0]);
-	isStoppedBySensor = 0;
 
 	/* Setup ROS. */
 	nh.initNode();
-        nh.subscribe(sub);
+	nh.subscribe(sub);
 }
 
 ISR(TIMER5_COMPA_vect) {
@@ -85,9 +83,8 @@ ISR(TIMER5_COMPA_vect) {
 }
 
 void loop() {
-	isStoppedBySensor = sensor->poll();
-        if (isStoppedBySensor == 0) {
-                nh.spinOnce();
+	if (!sensor->poll()) {
+		nh.spinOnce();
 	}
-        delay(100);
+	delay(100);
 }
