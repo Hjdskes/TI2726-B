@@ -9,6 +9,8 @@
 #include "motor.h"
 #include "Arduino.h"
 
+static const uint8_t MAX_DUTY_CYCLE = 255;
+
 Motor::Motor(int fwd, int rev, int en) : fwd(fwd), rev(rev), en(en) {
 	pinMode(fwd, OUTPUT);
 	pinMode(rev, OUTPUT);
@@ -19,21 +21,31 @@ Motor::Motor(int fwd, int rev, int en) : fwd(fwd), rev(rev), en(en) {
 /**
  * Given a certain percentage of the maximum speed,
  * this method will return the correct value to set
- * using analogWrite().
+ * using analogWrite(). Enable possible optimization
+ * for the compiler, since this function is so small.
  */
-static int getPWMValue(int speed) {
-	return (255 * speed) / 100;
+inline int getPWMValue(int speed) {
+	return (MAX_DUTY_CYCLE * speed) / 100;
+}
+
+static int capSpeed(int speed) {
+	if (speed > 100) {
+		return 100;
+	} else if (speed < 0) {
+		return 0;
+	}
+	return speed;
 }
 
 void Motor::forward(int speed) {
-	int pwm = getPWMValue(speed);
-	digitalWrite(this->rev, LOW); // FIXME: needed?
+	int pwm = getPWMValue(capSpeed(speed));
+	digitalWrite(this->rev, LOW);
 	analogWrite(this->fwd, pwm);
 }
 
 void Motor::backward(int speed) {
-	int pwm = getPWMValue(speed);
-	digitalWrite(this->fwd, LOW); // FIXME: needed?
+	int pwm = getPWMValue(capSpeed(speed));
+	digitalWrite(this->fwd, LOW);
 	analogWrite(this->rev, pwm);
 }
 
