@@ -13,8 +13,7 @@
 #include "motor.h"
 #include "sensor.h"
 
-/* TODO: test stopping when no messages have been received for one second.
-   TODO: test Twist message parsing.
+/* TODO: test Twist message parsing.
    TODO: add a timer to the sketch to make the motor control interrupt based?
    TODO: test stopping when the proximity sensor senses an object nearby.
    FIXME: when to restart engine.
@@ -31,16 +30,18 @@ class ArduinoBluetooth : public ArduinoHardware {
 Engine *engine = NULL;
 Sensor *sensor = NULL;
 ros::NodeHandle_<ArduinoBluetooth> nh;
-bool isStoppedBySensor();
+int isStoppedBySensor;
 
 static void act(const geometry_msgs::Twist& twist) {
 	/* Reset counter upon processing ROS message. */
-	TCNT5 = 0;
-	if (!isStoppedBySensor) {
-		engine->start();
-	}
+	//TCNT5 = 0;
+	//if (isStoppedBySensor == 0 && engine->isStopped()) {
+	//	engine->start();
+	//}
 	engine->move(twist.linear.x > 0, twist.linear.x, twist.angular.z);
 }
+
+ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &act);
 
 void setup() {
 	const int LEFT_MOTOR[] = { 6, 7, 24 };
@@ -56,7 +57,7 @@ void setup() {
 	 *
 	 * See libraries/sensor/sensor.cpp for a list on which timers are available
 	 * and comments with all instructions. */
-	noInterrupts();
+	/*noInterrupts();
 	TCCR5A = 0;
 	TCCR5B = 0;
 	TCNT5 = 0;
@@ -64,7 +65,7 @@ void setup() {
 	TCCR5B |= (1 << WGM12);
 	TCCR5B |= (1 << CS52);
 	TIMSK5 |= (1 << OCIE5A);
-	interrupts();
+	interrupts();*/
 
 	/* Setup engine. */
 	Motor *left = new Motor(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
@@ -73,24 +74,26 @@ void setup() {
 
 	/* Setup proximity sensor. */
 	sensor = new Sensor(engine, SENSOR[1], SENSOR[0]);
-	isStoppedBySensor = false;
+	isStoppedBySensor = 0;
 
 	/* Setup ROS. */
 	nh.initNode();
-	nh.subscribe("cmd_vel", 5, act);
+        nh.subscribe(sub);
 }
 
 ISR(TIMER5_COMPA_vect) {
 	/* If this interrupt launches it means that no ROS message has been received
 	 * in the passed second (because we reset the counter in the ROS callback),
 	 * so stop the engine. */
-	if (engine) {
-		engine->stop();
-	}
+	//if (engine) {
+	//	engine->stop();
+	//}
 }
 
 void loop() {
 	isStoppedBySensor = sensor->poll();
-	nh.spinOnce();
-	delay(100);
+        if (isStoppedBySensor == 0) {
+                nh.spinOnce();
+	}
+        delay(100);
 }

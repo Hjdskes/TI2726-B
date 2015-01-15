@@ -14,7 +14,7 @@
  * FIXME: not sure if this is the proper distance. */
 static const unsigned int MAX_DISTANCE = 12;
 /* Divide by this to receive distance in cm. */ 
-static const float PULSE_DIVIDE = 58.0;
+static const float PULSE_DIVIDE = 58.2;
 /* The maximum time delay in μs worth waiting. */
 static const unsigned int MAX_DELAY = (MAX_DISTANCE + 1) * PULSE_DIVIDE;
 /* The trigger pulse needs to be at least 10 μs long. */
@@ -86,49 +86,71 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 void Sensor::generatePulse() {
+	//digitalWrite(this->trigger, LOW);
+	//delayMicroseconds(2);
 	/* Generate a pulse. */
 	digitalWrite(this->trigger, HIGH);
 	// FIXME: check if this isn't too long for a callback.
 	delayMicroseconds(MIN_PULSE_LENGTH);
 	digitalWrite(this->trigger, LOW);
 	// FIXME: do check if this implicitly sets ECHO to HIGH!
+	//digitalWrite(this->echo, LOW);
 }
 
 unsigned long Sensor::receivePulse() {
 	/* Upper bound on micros(): if micros() is bigger than this value,
 	 * the returned distance will be larger than what we need it to be
 	 * so it's not worth waiting for anymore. */
-	unsigned long max_time = micros() + MAX_DELAY;
+	unsigned long max_time = micros();// + MAX_DELAY;
 
 	/* Block while the ECHO pin is HIGH. */
 	while (digitalRead(this->echo) == HIGH) {
 		/* If we cros our upper bound, return. */
-		if (micros() > max_time) {
-			return 0;
-		}
+		//if (micros() > max_time) {
+		//	return 0;
+		//}
 	}
 
 	// FIXME: not sure if needed or if implicitly done.
-	//digitalWrite(this->echo, LOW);
+	//digitalWrite(this->echo, HIGH);
 	/* Return the duration of the ECHO pin being HIGH. */
-	return micros() - (max_time - MAX_DELAY); //FIXME: also subtract instruction overhead?
+	return micros() - max_time;//(max_time - MAX_DELAY); //FIXME: also subtract instruction overhead?
 }
 
-bool Sensor::poll() {
-	bool res = false;
+int Sensor::poll() {
+	/*int res = 0;
 	unsigned long duration, distance;
 
-	if (!(duration = receivePulse())) {
-		return res;
+	duration = pulseIn(this->echo, HIGH);//receivePulse();
+	if (duration == 0) {
+		return 0;
 	}
 
-	distance = duration / PULSE_DIVIDE;
 	if (distance < MAX_DISTANCE) {
-		engine.stop()
-		res = true;
-	} else if (engine.isStopped()) {
-		engine.start();
+		engine->stop();
+		return 1;
+	} else if (engine->isStopped()) {
+		engine->start();
 	}
 
-	return res;
+	return 0;*/
+	unsigned long distance, start;
+
+	/*if (digitalRead(22) == HIGH) {//receivePulse();
+		start = micros();
+		while (digitalRead(22) == HIGH) {
+			;
+		}
+	}*/
+
+	distance = /*receivePulse()*/ pulseIn(this->echo, HIGH) / PULSE_DIVIDE;
+	if (distance > MAX_DISTANCE) {
+		if (engine->isStopped()) {
+			engine->start(); 
+		}
+		return 0;
+	} else {
+		engine->stop();
+		return 1;
+	}
 }
