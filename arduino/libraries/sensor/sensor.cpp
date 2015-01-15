@@ -90,32 +90,40 @@ void Sensor::generatePulse() {
 	digitalWrite(this->trigger, LOW);
 }
 
-/* FIXME: not working */
 unsigned long Sensor::receivePulse() {
-	/* Disable interrupts when we are processing a pulse. */
-	noInterrupts();
-
 	/* Upper bound on micros(): if micros() is bigger than this value,
 	 * the returned distance will be larger than what we need it to be
 	 * so it's not worth waiting for anymore. */
-	unsigned long max_time = micros() + MAX_DELAY;
+	unsigned long max_time;
+	unsigned long end_time;
 
-	/* Block while the ECHO pin is HIGH and we haven't crossed our upper bound. */
-	while (digitalRead(this->echo) == HIGH && micros() < max_time) {
-		delayMicroseconds(1);
+	/* If there is no pulse coming in, return right away. */
+	if (digitalRead(this->echo) == LOW) {
+		return 0;
 	}
 
-	/* Reenable interrupts and return the duration of the ECHO pin being HIGH. */
-	unsigned long end = micros();
+	/* Otherwise, disable interrupts and block for as long as the ECHO pin is
+	 * high and we haven't crossed our upper bound. After busy-waiting, record
+	 * the new time and return the difference after re-enabling interrupts. */
+	noInterrupts();
+	max_time = micros() + MAX_DELAY;
+	while (digitalRead(this->echo) == HIGH && micros() <= max_time) {
+		delayMicroseconds(1);
+	}
+	end_time = micros();
 	interrupts();
 
-	return end - (max_time - MAX_DELAY);
+	return end_time - (max_time - MAX_DELAY);
 }
 
 bool Sensor::poll() {
-	unsigned long distance;
+	unsigned long duration, distance;
 
-	distance = pulseIn(this->echo, HIGH) / PULSE_DIVIDE;
+	if (!(duration = receivePulse()) {
+		return false;
+	}
+
+	distance = duration / PULSE_DIVIDE;
 	if (distance <= MAX_DISTANCE) {
 		engine->stop();
 		return true;
