@@ -114,17 +114,21 @@ unsigned long Sensor::receivePulse() {
 	return micros() - (max_time - MAX_DELAY); //FIXME: also subtract instruction overhead?
 }
 
-void Sensor::poll() {
+bool Sensor::poll() {
+	bool res = false;
 	unsigned long duration, distance;
 
 	if (!(duration = receivePulse())) {
-		return;
+		return res;
 	}
 
 	distance = duration / PULSE_DIVIDE;
 	if (distance < MAX_DISTANCE) {
-		engine.stop();
+		engine.stop()
+		res = true;
 	} else if (engine.isStopped()) {
 		engine.start();
 	}
+
+	return res;
 }

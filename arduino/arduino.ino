@@ -14,8 +14,10 @@
 #include "sensor.h"
 
 /* TODO: test stopping when no messages have been received for one second.
+   TODO: test Twist message parsing.
    TODO: add a timer to the sketch to make the motor control interrupt based?
    TODO: test stopping when the proximity sensor senses an object nearby.
+   FIXME: when to restart engine.
 */
 
 /* Overload the standard settings that are used
@@ -29,10 +31,14 @@ class ArduinoBluetooth : public ArduinoHardware {
 Engine *engine = NULL;
 Sensor *sensor = NULL;
 ros::NodeHandle_<ArduinoBluetooth> nh;
+bool isStoppedBySensor();
 
 static void act(const geometry_msgs::Twist& twist) {
 	/* Reset counter upon processing ROS message. */
 	TCNT5 = 0;
+	if (!isStoppedBySensor) {
+		engine->start();
+	}
 	engine->move(twist.linear.x > 0, twist.linear.x, twist.angular.z);
 }
 
@@ -41,7 +47,7 @@ void setup() {
 	const int RIGHT_MOTOR[] = { 2, 3, 25 };
 	const int SENSOR[] = { 22, 23 };
 
-	/* Setup Timer5 to reliably fire a callback every second.
+	/* Setup Timer5 to reliably fire a interrupt every second.
 	 *
 	 * To do so, our value in the compare match register must be:
 	 * (16000000 / (256 * 1)) - 1 = 62499, where 16000000 is the Arduino
@@ -56,17 +62,18 @@ void setup() {
 	TCNT5 = 0;
 	OCR5A = 62499;
 	TCCR5B |= (1 << WGM12);
-	TCCR5B |= (1 << CS12);
+	TCCR5B |= (1 << CS52);
 	TIMSK5 |= (1 << OCIE5A);
 	interrupts();
 
 	/* Setup engine. */
-	Motor left(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
-	Motor right(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
-	engine = new Engine(&left, &right);
+	Motor *left = new Motor(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
+	Motor *right = new Motor(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
+	engine = new Engine(left, right);
 
 	/* Setup proximity sensor. */
 	sensor = new Sensor(engine, SENSOR[1], SENSOR[0]);
+	isStoppedBySensor = false;
 
 	/* Setup ROS. */
 	nh.initNode();
@@ -83,10 +90,7 @@ ISR(TIMER5_COMPA_vect) {
 }
 
 void loop() {
-	if (engine->isStopped()) {
-		engine->start();
-	}
-	sensor->poll();
+	isStoppedBySensor = sensor->poll();
 	nh.spinOnce();
 	delay(100);
 }

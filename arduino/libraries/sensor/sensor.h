@@ -34,8 +34,10 @@ class Sensor {
 		/**
 		 * Controls the sensor. It processes the data and detects obstacles,
 		 * stopping the engine when needed.
+		 * Returns true iff the engine has been stopped because of a detected
+		 * obstacle.
 		 */
-		void poll();
+		bool poll();
 
 	private:
 		Engine *engine;
