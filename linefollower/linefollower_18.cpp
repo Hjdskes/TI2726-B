@@ -30,8 +30,8 @@ static const uint8_t RIGHT = 1;
 static const int8_t LEFT = -1;
 
 /* Speed constants. */
-static const uint8_t FW_SPEED = 100;
-static const uint8_t TURN_SPEED = 40;
+static const uint8_t FW_SPEED = 70;
+static const uint8_t TURN_SPEED = 30;
 
 LineFollower::LineFollower() : it(nh) {
     /* Set compress image stream enabled. */
@@ -93,6 +93,7 @@ bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest)
 		img_ptr = cv_bridge::toCvCopy(src, 
 			sensor_msgs::image_encodings::BGR8);
 		dest = img_ptr->image;
+		ROS_INFO("rows: %d cols: %d", dest.rows, dest.cols);
 		return true;
 	} catch (cv_bridge::Exception& e) {
 		ROS_ERROR("cv_bridge exception: %s", e.what());

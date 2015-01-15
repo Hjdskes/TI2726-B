@@ -10,13 +10,13 @@
 #include "engine.h"
 #include "Arduino.h"
 
-/* The maximum sensor distance worth checking.
- * FIXME: not sure if this is the proper distance. */
+/* The maximum sensor distance worth checking. */
 static const unsigned int MAX_DISTANCE = 12;
 /* Divide by this to receive distance in cm. */ 
 static const float PULSE_DIVIDE = 58.2;
 /* The maximum time delay in μs worth waiting. */
-static const unsigned int MAX_DELAY = (MAX_DISTANCE + 1) * PULSE_DIVIDE;
+/* FIXME: choose value */
+static const unsigned int MAX_DELAY = 10000;//(MAX_DISTANCE + 1) * PULSE_DIVIDE;
 /* The trigger pulse needs to be at least 10 μs long. */
 static const unsigned int MIN_PULSE_LENGTH = 10;
 
@@ -86,12 +86,12 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 void Sensor::generatePulse() {
-	/* Generate a pulse. */
 	digitalWrite(this->trigger, HIGH);
 	delayMicroseconds(MIN_PULSE_LENGTH);
 	digitalWrite(this->trigger, LOW);
 }
 
+/* FIXME: not working */
 unsigned long Sensor::receivePulse() {
 	/* Disable interrupts when we are processing a pulse. */
 	noInterrupts();
@@ -101,37 +101,23 @@ unsigned long Sensor::receivePulse() {
 	 * so it's not worth waiting for anymore. */
 	unsigned long max_time = micros() + MAX_DELAY;
 
-	/* Block while the ECHO pin is HIGH. */
-	while (digitalRead(this->echo) == HIGH) {
-		/* If we cros our upper bound, reenable interrupts and return. */
+	/* Block while the ECHO pin is HIGH and we haven't crossed our upper bound. */
+	while (digitalRead(this->echo) == HIGH && micros() < max_time) {
 		delayMicroseconds(1);
-		if (micros() > max_time) {
-			interrupts();
-			return 0;
-		}
 	}
 
 	/* Reenable interrupts and return the duration of the ECHO pin being HIGH. */
 	unsigned long end = micros();
 	interrupts();
-	return end - (max_time - MAX_DELAY); //FIXME: also subtract instruction overhead?
+
+	return end - (max_time - MAX_DELAY);
 }
 
 int Sensor::poll() {
-	unsigned long distance, duration;
+	unsigned long distance;
 
-	if ((duration = pulseIn(this->echo, HIGH)) == 0) {
-		if (engine->isStopped()) {
-			engine->start(); 
-		}
-		return 0;
-	}
-
-	distance = duration / PULSE_DIVIDE;
+	distance = pulseIn(this->echo, HIGH) / PULSE_DIVIDE;
 	if (distance > MAX_DISTANCE) {
-		if (engine->isStopped()) {
-			engine->start(); 
-		}
 		return 0;
 	} else {
 		engine->stop();

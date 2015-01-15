@@ -13,12 +13,6 @@
 #include "motor.h"
 #include "sensor.h"
 
-/* TODO: test Twist message parsing.
-   TODO: add a timer to the sketch to make the motor control interrupt based?
-   TODO: test stopping when the proximity sensor senses an object nearby.
-   FIXME: when to restart engine.
-*/
-
 /* Overload the standard settings that are used
  * by ros_lib to use the specified Serial port and baud rate. */
 class ArduinoBluetooth : public ArduinoHardware { 
@@ -34,10 +28,10 @@ int isStoppedBySensor;
 
 static void act(const geometry_msgs::Twist& twist) {
 	/* Reset counter upon processing ROS message. */
-	//TCNT5 = 0;
-	//if (isStoppedBySensor == 0 && engine->isStopped()) {
-	//	engine->start();
-	//}
+	TCNT5 = 0;
+	if (engine->isStopped()) {
+		engine->start();
+	}
 	engine->move(twist.linear.x > 0, twist.linear.x, twist.angular.z);
 }
 
@@ -57,7 +51,7 @@ void setup() {
 	 *
 	 * See libraries/sensor/sensor.cpp for a list on which timers are available
 	 * and comments with all instructions. */
-	/*noInterrupts();
+	noInterrupts();
 	TCCR5A = 0;
 	TCCR5B = 0;
 	TCNT5 = 0;
@@ -65,12 +59,12 @@ void setup() {
 	TCCR5B |= (1 << WGM12);
 	TCCR5B |= (1 << CS52);
 	TIMSK5 |= (1 << OCIE5A);
-	interrupts();*/
+	interrupts();
 
 	/* Setup engine. */
 	Motor *left = new Motor(LEFT_MOTOR[0], LEFT_MOTOR[1], LEFT_MOTOR[2]);
 	Motor *right = new Motor(RIGHT_MOTOR[0], RIGHT_MOTOR[1], RIGHT_MOTOR[2]);
-	engine = new Engine(left, right);
+	engine = new Engine(left, right);  
 
 	/* Setup proximity sensor. */
 	sensor = new Sensor(engine, SENSOR[1], SENSOR[0]);
@@ -85,9 +79,9 @@ ISR(TIMER5_COMPA_vect) {
 	/* If this interrupt launches it means that no ROS message has been received
 	 * in the passed second (because we reset the counter in the ROS callback),
 	 * so stop the engine. */
-	/*if (engine) {
+	if (engine) {
 		engine->stop();
-	}*/
+	} 
 }
 
 void loop() {
