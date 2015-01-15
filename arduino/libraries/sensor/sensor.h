@@ -31,12 +31,11 @@ class Sensor {
 		 */
 		void generatePulse();
 		/**
-		 * Controls the sensor. It processes the data and detects obstacles,
+		 * Polls the sensor. It processes the data and detects obstacles,
 		 * stopping the engine when needed.
-		 * Returns 1 iff the engine has been stopped because of a detected
-		 * obstacle, 0 otherwise.
+		 * Returns true iff an object has been detected.
 		 */
-		int poll();
+		bool poll();
 
 	private:
 		Engine *engine;

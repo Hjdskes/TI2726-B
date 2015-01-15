@@ -10,13 +10,12 @@
 #include "engine.h"
 #include "Arduino.h"
 
-/* The maximum sensor distance worth checking. */
+/* The maximum sensor distance worth checking in cm. */
 static const unsigned int MAX_DISTANCE = 12;
-/* Divide by this to receive distance in cm. */ 
+/* Divide the pulse duration by this number to receive the distance in cm. */ 
 static const float PULSE_DIVIDE = 58.2;
 /* The maximum time delay in μs worth waiting. */
-/* FIXME: choose value */
-static const unsigned int MAX_DELAY = 10000;//(MAX_DISTANCE + 1) * PULSE_DIVIDE;
+static const unsigned int MAX_DELAY = MAX_DISTANCE * PULSE_DIVIDE;
 /* The trigger pulse needs to be at least 10 μs long. */
 static const unsigned int MIN_PULSE_LENGTH = 10;
 
@@ -113,14 +112,14 @@ unsigned long Sensor::receivePulse() {
 	return end - (max_time - MAX_DELAY);
 }
 
-int Sensor::poll() {
+bool Sensor::poll() {
 	unsigned long distance;
 
 	distance = pulseIn(this->echo, HIGH) / PULSE_DIVIDE;
-	if (distance > MAX_DISTANCE) {
-		return 0;
-	} else {
+	if (distance <= MAX_DISTANCE) {
 		engine->stop();
-		return 1;
+		return true;
 	}
+
+	return false;
 }
