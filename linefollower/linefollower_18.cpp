@@ -77,13 +77,13 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 
 	/* Code below is for debugging purposes only.*/
 
-	/* Draw lines detected with Hough.
+	/* Draw lines detected with Hough.*/
 	drawDetectedLines(bgr_img, lines);
 
-	/* Resize image to suitable size and show the result.
+	/* Resize image to suitable size and show the result. */
 	cv::resize(bgr_img, bgr_img, cv::Size(540, 540));
 	cv::imshow("Detected line image", bgr_img);
-	cv::waitKey(3); */
+	cv::waitKey(3);
 }
 
 bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest) {

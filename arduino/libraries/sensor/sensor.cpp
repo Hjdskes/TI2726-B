@@ -99,26 +99,28 @@ unsigned long Sensor::receivePulse() {
 	/* Upper bound on micros(): if micros() is bigger than this value,
 	 * the returned distance will be larger than what we need it to be
 	 * so it's not worth waiting for anymore. */
-	unsigned long max_time = micros();// + MAX_DELAY;
+	unsigned long max_time = micros() + MAX_DELAY;
 
 	/* Block while the ECHO pin is HIGH. */
 	while (digitalRead(this->echo) == HIGH) {
 		/* If we cros our upper bound, reenable interrupts and return. */
+		delayMicroseconds(1);
 		if (micros() > max_time) {
 			interrupts();
 			return 0;
-		}	
+		}
 	}
 
 	/* Reenable interrupts and return the duration of the ECHO pin being HIGH. */
+	unsigned long end = micros();
 	interrupts();
-	return micros() - (max_time - MAX_DELAY); //FIXME: also subtract instruction overhead?
+	return end - (max_time - MAX_DELAY); //FIXME: also subtract instruction overhead?
 }
 
 int Sensor::poll() {
 	unsigned long distance, duration;
 
-	if ((duration = receivePulse()) == 0) {
+	if ((duration = pulseIn(this->echo, HIGH)) == 0) {
 		if (engine->isStopped()) {
 			engine->start(); 
 		}

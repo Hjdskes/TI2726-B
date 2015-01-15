@@ -85,9 +85,9 @@ ISR(TIMER5_COMPA_vect) {
 	/* If this interrupt launches it means that no ROS message has been received
 	 * in the passed second (because we reset the counter in the ROS callback),
 	 * so stop the engine. */
-	//if (engine) {
-	//	engine->stop();
-	//}
+	/*if (engine) {
+		engine->stop();
+	}*/
 }
 
 void loop() {
