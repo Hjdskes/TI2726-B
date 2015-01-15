@@ -33,6 +33,10 @@ static const int8_t LEFT = -1;
 static const uint8_t FW_SPEED = 70;
 static const uint8_t TURN_SPEED = 30;
 
+/* Dimension constants */
+static const int WIDTH = 1920;
+static const int HEIGHT = 1080;
+
 LineFollower::LineFollower() : it(nh) {
     /* Set compress image stream enabled. */
     image_transport::TransportHints hints("compressed", ros::TransportHints());
@@ -50,7 +54,9 @@ LineFollower::LineFollower() : it(nh) {
 
 void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	/* Declare all images needed. */
-	cv::Mat bgr_img, bin_img, edge_img;
+	cv::Mat bgr_img(WIDTH, HEIGHT, CV_8UC3);
+	cv::Mat bin_img(WIDTH, HEIGHT, CV_8UC1);
+	cv::Mat edge_img(WIDTH, HEIGHT, CV_8UC1);
 	/* Create a vector to save detected lines. */
 	std::vector<cv::Vec4i> lines;
 	
@@ -58,7 +64,7 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	if (!toCVImg(img, bgr_img)) return;
 
 	/* Crop the image to only look at close lines. */
-	bgr_img = cv::Mat(bgr_img, cv::Rect(960, 60, 960, 960));
+	bgr_img = cv::Mat(bgr_img, cv::Rect(WIDTH / 2, HEIGHT / 18, WIDTH / 2, WIDTH / 2));
 	/* Transpose and flip the image so it is oriented properly. */
 	cv::transpose(bgr_img, bgr_img);
 	cv::flip(bgr_img, bgr_img, 1);
@@ -81,9 +87,8 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	drawDetectedLines(bgr_img, lines);
 
 	/* Resize image to suitable size and show the result. */
-	cv::resize(bgr_img, bgr_img, cv::Size(540, 540));
+	cv::resize(bgr_img, bgr_img, cv::Size(HEIGHT / 2, HEIGHT / 2));
 	cv::imshow("Detected line image", bgr_img);
-	cv::waitKey(3);
 }
 
 bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest) {
@@ -93,7 +98,6 @@ bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest)
 		img_ptr = cv_bridge::toCvCopy(src, 
 			sensor_msgs::image_encodings::BGR8);
 		dest = img_ptr->image;
-		ROS_INFO("rows: %d cols: %d", dest.rows, dest.cols);
 		return true;
 	} catch (cv_bridge::Exception& e) {
 		ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -107,19 +111,18 @@ void LineFollower::toBinary(cv::Mat& src, cv::Mat& dest) {
 }
 
 void LineFollower::toCanny(cv::Mat& src, cv::Mat& dest) {
-	/* Blur img. Needed for detecting edges. */
-	cv::blur(src, dest, cv::Size(KERNEL_SIZE, KERNEL_SIZE));
+	/* Blur img. Needed for smoothly detecting edges. */
+	cv::GaussianBlur(src, dest, cv::Size(5, 5), 1.4);
 
 	/* Detect edges. */
-	cv::Canny(dest, dest, LOW_THR, 4*LOW_THR, KERNEL_SIZE);
+	cv::Canny(dest, dest, LOW_THR, 3*LOW_THR, KERNEL_SIZE);
 }
 
 void LineFollower::toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines) {
 	/* Hough transform. Saves detected lines in vector 'lines'.
-	 * FIXME: find perfect values
 	 * http://docs.opencv.org/modules/imgproc/doc/feature_detection.html?highlight=houghlinesp#houghlinesp 
 	 */ 
-	cv::HoughLinesP(src, lines, 1, CV_PI/180, 50, 30, 10);
+	cv::HoughLinesP(src, lines, 1, CV_PI/180, 100, 50, 30);
 }
 
 void LineFollower::drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines) {
@@ -196,13 +199,16 @@ void LineFollower::generateTwist(int dir) {
 	/* Create and publish a Twist message indicating the speed and direction. */
 	geometry_msgs::Twist twist;
     twist.angular.z = dir;
-    twist.linear.x = dir == 0 ? FW_SPEED : TURN_SPEED;
+    twist.linear.x = dir == FORWARD ? FW_SPEED : TURN_SPEED;
 	twist_pub.publish(twist);
 }
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "image_stream");
 	LineFollower lf;
-	ros::spin();
+	/* Exit on any key. */
+	while (cv::waitKey(3) < 0) {
+		ros::spinOnce();
+	}
 	return 0;
 }
