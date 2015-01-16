@@ -6,7 +6,6 @@
  * Piet van Agtmaal, 4321278
  */
 
-#include <math.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <cv_bridge/cv_bridge.h>
@@ -15,14 +14,22 @@
 
 #include "linefollower_18.h"
 
+/* Minimum delay between 2 successive Twist commands. */
+static const uint8_t MIN_DELAY = 250;
+
+/* Maximum angle allowed before adjusting speed for taking corners. */
+static const uint8_t FW_CORNER_ALLOWED = 20;
+/* Maximum corner allowed to be taken. */
+static const uint8_t MAX_CORNER = 100;
+
 /* Constants used for binary conversion.
  * BGR. Adjust for different color detection. */
-static const cv::Scalar MIN_VALS(0, 100, 0);
-static const cv::Scalar MAX_VALS(200, 200, 200);
+static const cv::Scalar MIN_VALS(20, 80, 0);
+static const cv::Scalar MAX_VALS(180, 150, 120);
 
 /* Constants used for edge detection. */
 static const uint8_t KERNEL_SIZE = 3;
-static const uint8_t LOW_THR = 40;
+static const uint8_t LOW_THR = 40;	
 
 /* Direction constants. */
 static const uint8_t FORWARD = 0;
@@ -33,9 +40,10 @@ static const int8_t LEFT = -1;
 static const uint8_t FW_SPEED = 70;
 static const uint8_t TURN_SPEED = 30;
 
-/* Dimension constants */
+/* Dimension constants. */
 static const int WIDTH = 1920;
 static const int HEIGHT = 1080;
+static const cv::Point ORIGIN(480,960);
 
 LineFollower::LineFollower() : it(nh) {
     /* Set compress image stream enabled. */
@@ -46,10 +54,6 @@ LineFollower::LineFollower() : it(nh) {
 
 	/* Publish to /cmd_vel. */
 	twist_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-
-	/* Init globals needed for averaging calculated direction. */
-	cb_count = 0;
-	calc_dirs = 0;
 }
 
 void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
@@ -79,16 +83,14 @@ void LineFollower::imageCallback(const sensor_msgs::ImageConstPtr& img) {
 	toHough(edge_img, lines); 
 
 	/* Extract the best direction from the lines. */
-	bestDirection(lines);
+	bestDirection(lines, bgr_img);
 
 	/* Code below is for debugging purposes only.*/
-
-	/* Draw lines detected with Hough.*/
-	drawDetectedLines(bgr_img, lines);
 
 	/* Resize image to suitable size and show the result. */
 	cv::resize(bgr_img, bgr_img, cv::Size(HEIGHT / 2, HEIGHT / 2));
 	cv::imshow("Detected line image", bgr_img);
+	cv::waitKey(3);
 }
 
 bool LineFollower::toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest) {
@@ -125,80 +127,68 @@ void LineFollower::toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines) {
 	cv::HoughLinesP(src, lines, 1, CV_PI/180, 100, 50, 30);
 }
 
-void LineFollower::drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines) {
-	cv::Scalar line_color(0,0,255);
-	unsigned int line_width = 3;
+cv::Vec4i LineFollower::findClosest(std::vector<cv::Vec4i>& lines) {
+	cv::Vec4i closest;
+	/* Initialize the minimum distance to the largest value possible. */
+	float min_dist = ORIGIN.y;
+	float dist;
 
-	for (size_t i = 0; i < lines.size(); i++) {
-		/* Add each seperate line to the image. */
-		cv::Point point1(lines[i][0], lines[i][1]);
-		cv::Point point2(lines[i][2], lines[i][3]);
-		/* Draw anti-aliased lines. */
-		cv::line(img, point1, point2, line_color, line_width, CV_AA);
-	}
-}
-
-int LineFollower::findDirection(std::vector<cv::Vec4i>& lines) {
-	max_h = 0;
-	max_v = 0;
-
-	/* Loop through all lines and find the longest one. */
-	for (uint8_t i = 0; i < lines.size(); i++) {
+	/* Find the line that is the closest to the origin. */
+	for (int i = 0; i < lines.size(); i++) {
 		cv::Vec4i line = lines.at(i);
-
-		uint16_t h = abs(line[2] - line[0]);
-		if (h > max_h) {
-			max_h = h;
-			max_line = line;
-		}
-
-		uint16_t v = abs(line[3] - line[1]);
-		if (v > max_v) {
-			max_v = v; 
+		dist = std::min(
+			cv::norm(cv::Point2i(lines[i][0], lines[i][1]) - ORIGIN), 
+			cv::norm(cv::Point2i(lines[i][2], lines[i][3]) - ORIGIN)
+		);
+		if (dist < min_dist) {
+			min_dist = dist;
+			closest = line;
 		}
 	}
-
-	/* Calculate the angle between the longest line and the x-axis. */
-	float angle = atan2(max_line[3] - max_line[1], max_line[2] - max_line[0]);
-	if (max_v > max_h) {
-		return FORWARD;
-	} else if (angle > .1) {
-		return LEFT;
-	} else {
-		return RIGHT;	
-	}
+	return closest;
 }
 
-void LineFollower::bestDirection(std::vector<cv::Vec4i>& lines) {
-	/* Add the calculated direction to the direction total. */
-	calc_dirs += findDirection(lines);
-	/* The callback has been called another time, so increment the counter. */
-	cb_count++;
-	/* Only return a direction if the callback has been run 5 times. */
-	if (cb_count < 5) {
+void LineFollower::bestDirection(std::vector<cv::Vec4i>& lines, cv::Mat& img) {
+	/* Initialize statically, less than ros::Time::now() because otherwise
+	 * the first 250ms are wasted. */
+	static ros::Time last = ros::Time::now() - ros::Duration(1);
+
+	/* Don't evaluate the line if the previous command was sent less than 250ms ago. */
+	if ((ros::Time::now() - last).toSec() * 1000 < MIN_DELAY) {
 		return;
 	}
 
-	if (calc_dirs > 2) {
-		generateTwist(RIGHT);	
-	} else if (calc_dirs < -2) {
-		generateTwist(LEFT);
-	} else {
-		generateTwist(FORWARD);
-	}
+	cv::Vec4i c = findClosest(lines);
+	cv::Point2i p1(c[0], c[1]);
+	cv::Point2i p2(c[2], c[3]);
 
-	/* Only activate for debugging.
-	ROS_INFO("> 2: right, < -2: left, else forward: %d", calc_dirs); */
-	
-	/* Reset the globals. */
-	calc_dirs = 0;
-	cb_count = 0;
+	/* Draw the closest line. */ 
+	cv::line(img, p1, p2, cv::Scalar(255,0,0), 3, CV_AA);
+
+	/* Calculate the angle in degrees w.r.t the y-axis. */
+	int angle = (atan2(c[3] - c[1], c[2] - c[0]) - CV_PI / 2) * 180 / CV_PI;
+
+	/* Generate a Twist message. */
+	if (angle > FW_CORNER_ALLOWED) {
+		generateTwist(RIGHT, angle);
+	} else if (angle < -FW_CORNER_ALLOWED) {
+		generateTwist(LEFT, angle);	
+	} else {
+		generateTwist(FORWARD, angle);
+	}
 }
 
-void LineFollower::generateTwist(int dir) {
-	/* Create and publish a Twist message indicating the speed and direction. */
+void LineFollower::generateTwist(int dir, int angle) {
+	/* Correct for angles going out of bounds. */	
+	if (angle < -MAX_CORNER)
+		angle += 180;
+	else if (angle > MAX_CORNER)
+		angle -= 180;
+
+	/* Create and publish a Twist message indicating the speed, angle and direction. */
 	geometry_msgs::Twist twist;
-    twist.angular.z = dir;
+    twist.angular.z = angle;
+	/* Adjust speed if a corner is to be taken. */
     twist.linear.x = dir == FORWARD ? FW_SPEED : TURN_SPEED;
 	twist_pub.publish(twist);
 }
@@ -206,9 +196,6 @@ void LineFollower::generateTwist(int dir) {
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "image_stream");
 	LineFollower lf;
-	/* Exit on any key. */
-	while (cv::waitKey(3) < 0) {
-		ros::spinOnce();
-	}
+	ros::spin();
 	return 0;
 }

@@ -23,26 +23,14 @@ class LineFollower {
 		image_transport::ImageTransport it;
 		image_transport::Subscriber image_sub;
 
-		/* Global used to keep track of the times the callback has been run. */
-		uint8_t cb_count;
-		/* Global used to keep track of the best directions while not averaging. */
-		int calc_dirs;
-	
-		/* Globals used to detect the longest horizontal and vertical lines */
-		unsigned int max_h;
-		unsigned int max_v;
-		/* Global used for storing the coordinates of the longest line. */
-		cv::Vec4i max_line;
-
 		void imageCallback(const sensor_msgs::ImageConstPtr& color_img);
 		bool toCVImg(const sensor_msgs::ImageConstPtr& src, cv::Mat& dest);
 		void toBinary(cv::Mat& src, cv::Mat& dest);
 		void toCanny(cv::Mat& src, cv::Mat& dest);
 		void toHough(cv::Mat& src, std::vector<cv::Vec4i>& lines);	
-		void drawDetectedLines(cv::Mat& img, std::vector<cv::Vec4i>& lines);
-		int findDirection(std::vector<cv::Vec4i>& lines);
-		void bestDirection(std::vector<cv::Vec4i>& lines);
-		void generateTwist(int dir);
+		void bestDirection(std::vector<cv::Vec4i>& lines, cv::Mat& img);
+		cv::Vec4i findClosest(std::vector<cv::Vec4i>& lines);
+		void generateTwist(int dir, int angle);
 };
 
 #endif /* _LINEFOLLOWER_H_ */
