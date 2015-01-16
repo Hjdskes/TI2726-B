@@ -12,27 +12,27 @@
 Engine::Engine(Motor *left, Motor *right) : left(left), right(right) {
 }
 
-void Engine::turnLeft(int speed) {
-	left->backward(speed);
-	right->forward(speed);
-}
-
-void Engine::turnRight(int speed) {
-	left->forward(speed);
-	right->backward(speed);
-}
-
-void Engine::moveForward(int speed) {
+void Engine::moveForward(const int speed) {
 	left->forward(speed);
 	right->forward(speed);
 }
 
-void Engine::moveBackward(int speed) {
+void Engine::moveBackward(const int speed) {
 	left->backward(speed);
 	right->backward(speed);
 }
 
-void Engine::move(bool forward, int speed, int angular) {
+void Engine::turnLeft(const int speed) {
+	left->backward(speed);
+	right->forward(speed);
+}
+
+void Engine::turnRight(const int speed) {
+	left->forward(speed);
+	right->backward(speed);
+}
+
+void Engine::move(bool forward, const int speed, const int angular) {
 	// FIXME: perhaps use angular to control speed when taking corners.
 	if (angular == 0) {
 		if (forward) {

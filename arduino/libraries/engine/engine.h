@@ -32,7 +32,7 @@ class Engine {
 		 * Makes the robot move in the specified direction, using the given speed and angular value.
 		 * Setting forward to true means forward movement, whereas false means backward.
 		 */
-		void move(bool forward, int speed, int angular);
+		void move(bool forward, const int speed, const int angular);
 		/**
 		 * Starts the engine.
 		 */
@@ -50,10 +50,11 @@ class Engine {
 		Motor *left;
 		Motor *right;
 
-		void moveForward(int speed);
-		void moveBackward(int speed);
-		void turnLeft(int speed);
-		void turnRight(int speed);
+		void moveForward(const int speed);
+		void moveBackward(const int speed);
+		void turnLeft(const int speed);
+		void turnRight(const int speed);
+		void setTimer(const int angularVelocity);
 };
 
 #endif /* _ENGINE_H_ */
