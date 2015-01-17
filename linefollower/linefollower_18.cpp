@@ -23,7 +23,7 @@ static const uint8_t FW_CORNER_ALLOWED = 20;
 static const uint8_t MAX_CORNER = 100;
 
 /* Constants used for binary conversion.
- * BGR. Adjust for different color detection. */
+ * HSV. Adjust for different color detection. */
 static const cv::Scalar MIN_VALS(20, 80, 0);
 static const cv::Scalar MAX_VALS(180, 150, 120);
 
