@@ -13,11 +13,6 @@
 #include "motor.h"
 #include "sensor.h"
 
-/*
-	TODO: motor timer met hoeksnelheid
-	TODO: uint8_t etc waar mogelijk? wat gebeurt er dan in getPWMValue?
-*/
-
 /* Overload the standard settings that are used
  * by ros_lib to use the specified Serial port and baud rate. */
 class ArduinoBluetooth : public ArduinoHardware { 
@@ -36,7 +31,7 @@ static void act(const geometry_msgs::Twist& twist) {
 	if (engine->isStopped()) {
 		engine->start();
 	}
-	engine->move(twist.linear.x > 0, twist.linear.x, twist.angular.z);
+	engine->move(twist.linear.x >= 0, twist.linear.x, twist.angular.z);
 }
 
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &act);
