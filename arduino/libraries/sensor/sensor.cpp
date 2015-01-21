@@ -86,6 +86,7 @@ ISR(TIMER1_COMPA_vect) {
 
 void Sensor::generatePulse() {
 	digitalWrite(this->trigger, HIGH);
+	/* Busy wait 10 μs. */
 	delayMicroseconds(MIN_PULSE_LENGTH);
 	digitalWrite(this->trigger, LOW);
 }

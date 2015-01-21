@@ -15,12 +15,6 @@ class Motor;
 /**
  * This class represents the actual engine in totality. It makes use of two
  * Motor instances; one for the left motor and one for the right motor.
- *
- * Speeds are taken as percentages and thus should be between 0 and 100
- * inclusive.
- *
- * Negative angles mean turning left. Positive angles mean turning right. An
- * angle of zero means going straight.
  */
 class Engine {
 	public:
@@ -29,10 +23,14 @@ class Engine {
 		 */
 		Engine(Motor *left, Motor *right);
 		/**
-		 * Makes the robot move in the specified direction, using the given speed and angular value.
-		 * Setting forward to true means forward movement, whereas false means backward.
+		 * Makes the robot move in the specified direction, using the
+		 * given speed. Speed is taken as a percentage and thus should
+		 * be between 0 and 100 inclusive.
+		 * Negative angles mean turning left, whereas positive angles
+		 * mean turning right. An angle of zero means going straight.
+		 * The tracks turn forwards iff forward is true.
 		 */
-		void move(bool forward, const int speed, const int angular);
+		void move(const bool forward, const int speed, const int angular);
 		/**
 		 * Starts the engine.
 		 */
@@ -54,7 +52,6 @@ class Engine {
 		void moveBackward(const int speed);
 		void turnLeft(const int speed);
 		void turnRight(const int speed);
-		void setTimer(const int angularVelocity);
 };
 
 #endif /* _ENGINE_H_ */

@@ -21,7 +21,7 @@ class Sensor {
 	public:
 		/**
 		 * Constructs a new Sensor instance, to poll for objects and
-		 * stop/start the engine appropriately.
+		 * stop the engine appropriately.
 		 * It takes care of initialising the pinModes itself and configures
 		 * Timer1 for its own use.
 		 */

@@ -32,7 +32,7 @@ void Engine::turnRight(const int speed) {
 	right->backward(speed);
 }
 
-void Engine::move(bool forward, const int speed, const int angular) {
+void Engine::move(const bool forward, const int speed, const int angular) {
 	// FIXME: perhaps use angular to control speed when taking corners.
 	if (angular == 0) {
 		if (forward) {

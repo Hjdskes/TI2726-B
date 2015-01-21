@@ -9,6 +9,7 @@
 #include "motor.h"
 #include "Arduino.h"
 
+/* Maximum duty cycle for analogWrite. */
 static const uint8_t MAX_DUTY_CYCLE = 255;
 
 Motor::Motor(const int fwd, const int rev, const int en) : fwd(fwd), rev(rev), en(en) {
