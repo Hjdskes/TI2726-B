@@ -14,11 +14,8 @@
 
 #include "linefollower_18.h"
 
-/* Minimum delay between 2 successive Twist commands. */
-static const uint8_t MIN_DELAY = 250;
-
 /* Maximum angle allowed before adjusting speed for taking corners. */
-static const uint8_t FW_CORNER_ALLOWED = 20;
+static const uint8_t FW_CORNER_ALLOWED = 10;
 /* Maximum corner allowed to be taken. */
 static const uint8_t MAX_CORNER = 100;
 
@@ -149,16 +146,8 @@ cv::Vec4i LineFollower::findClosest(std::vector<cv::Vec4i>& lines) {
 }
 
 void LineFollower::bestDirection(std::vector<cv::Vec4i>& lines, cv::Mat& img) {
-	/* Initialize statically, less than ros::Time::now() because otherwise
-	 * the first 250ms are wasted. */
-	static ros::Time last = ros::Time::now() - ros::Duration(1);
-
-	/* Don't evaluate the line if the previous command was sent less than 250ms ago. */
-	if ((ros::Time::now() - last).toSec() * 1000 < MIN_DELAY) {
-		return;
-	}
-
 	cv::Vec4i c = findClosest(lines);
+	/* Extract points from the closest line. */
 	cv::Point2i p1(c[0], c[1]);
 	cv::Point2i p2(c[2], c[3]);
 
