@@ -24,7 +24,6 @@ namespace rosserial_msgs
       enum { ID_PARAMETER_REQUEST = 6 };
       enum { ID_LOG = 7 };
       enum { ID_TIME = 10 };
-      enum { ID_TX_STOP = 11 };
 
     virtual int serialize(unsigned char *outbuffer) const
     {

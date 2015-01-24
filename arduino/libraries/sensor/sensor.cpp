@@ -91,6 +91,7 @@ void Sensor::generatePulse() {
 	digitalWrite(this->trigger, LOW);
 }
 
+/* FIXME: not working. */
 unsigned long Sensor::receivePulse() {
 	/* Upper bound on micros(): if micros() is bigger than this value,
 	 * the returned distance will be larger than what we need it to be
@@ -100,7 +101,7 @@ unsigned long Sensor::receivePulse() {
 
 	/* If there is no pulse coming in, return right away. */
 	if (digitalRead(this->echo) == LOW) {
-		return 0;
+		return -1;
 	}
 
 	/* Otherwise, disable interrupts and block for as long as the ECHO pin is
@@ -120,9 +121,11 @@ unsigned long Sensor::receivePulse() {
 bool Sensor::poll() {
 	unsigned long duration, distance;
 
-	if (!(duration = receivePulse())) {
+	duration = pulseIn(this->echo, HIGH);
+	/*duration = receivePulse();
+	if (duration < 0) {
 		return false;
-	}
+	}*/
 
 	distance = duration / PULSE_DIVIDE;
 	if (distance <= MAX_DISTANCE) {

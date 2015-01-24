@@ -6,6 +6,8 @@
  * Piet van Agtmaal, 4321278
  */
 
+#include <stdlib.h>
+
 #include "engine.h"
 #include "motor.h"
 
@@ -22,18 +24,17 @@ void Engine::moveBackward(const int speed) {
 	right->backward(speed);
 }
 
-void Engine::turnLeft(const int speed) {
-	left->backward(speed);
+void Engine::turnLeft(const int speed, const int angular) {
+	left->forward(speed / 3);
 	right->forward(speed);
 }
 
-void Engine::turnRight(const int speed) {
+void Engine::turnRight(const int speed, const int angular) {
 	left->forward(speed);
-	right->backward(speed);
+	right->forward(speed / 3);
 }
 
 void Engine::move(const bool forward, const int speed, const int angular) {
-	// FIXME: perhaps use angular to control speed when taking corners.
 	if (angular == 0) {
 		if (forward) {
 			moveForward(speed);
@@ -42,15 +43,15 @@ void Engine::move(const bool forward, const int speed, const int angular) {
 		}
 	} else if (angular < 0) {
 		if (forward) {
-			turnLeft(speed);
+			turnLeft(speed, abs(angular));
 		} else {
-			turnRight(speed);
+			turnRight(speed, abs(angular));
 		}
 	} else {
 		if (forward) {
-			turnRight(speed);
+			turnRight(speed, angular);
 		} else {
-			turnLeft(speed);
+			turnLeft(speed, angular);
 		}
 	}
 }
