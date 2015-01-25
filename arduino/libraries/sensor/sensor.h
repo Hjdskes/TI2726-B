@@ -43,7 +43,9 @@ class Sensor {
 		const int echo;
 
 		/**
-		 * Receives a pulse. The returned value is the pulse duration in μs.
+		 * Receives a pulse. The returned value is the pulse duration in μs,
+		 * or -1 when the pulse would be too long for an object to be
+		 * close enough to stop.
 		 */
 		unsigned long receivePulse();
 };
