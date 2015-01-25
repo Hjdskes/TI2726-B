@@ -6,6 +6,8 @@
  * Piet van Agtmaal, 4321278
  */
 
+#include <stdlib.h>
+
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 
@@ -31,7 +33,7 @@ static void act(const geometry_msgs::Twist& twist) {
 	if (engine->isStopped()) {
 		engine->start();
 	}
-	engine->move(twist.linear.x >= 0, twist.linear.x, twist.angular.z);
+	engine->move(twist.linear.x >= 0, abs(twist.linear.x), twist.angular.z);
 }
 
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &act);
