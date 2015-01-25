@@ -9,6 +9,12 @@
 #include "engine.h"
 #include "motor.h"
 
+/* This constant is used to go slightly forward while turning. For example,
+ * when turning left both motors would be spinning but the left one only 
+ * uses 1/3 of the given speed for the right engine. WARNING: cannot be 0!
+ */
+const static uint8_t CORNER_SPEED_FRACTION = 3;
+
 Engine::Engine(Motor *left, Motor *right) : left(left), right(right) {
 }
 
@@ -23,13 +29,13 @@ void Engine::moveBackward(const int speed) {
 }
 
 void Engine::turnLeft(const int speed) {
-	left->forward(speed / 3);
+	left->forward(speed / CORNER_SPEED_FRACTION);
 	right->forward(speed);
 }
 
 void Engine::turnRight(const int speed) {
 	left->forward(speed);
-	right->forward(speed / 3);
+	right->forward(speed / CORNER_SPEED_FRACTION);
 }
 
 void Engine::move(const bool forward, const int speed, const int angular) {
