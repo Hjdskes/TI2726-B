@@ -12,7 +12,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "linefollower_18.h"
+#include "linefollower_28.h"
 
 /* Minimum delay between 2 successive Twist commands. */
 static const uint16_t MIN_DELAY = 300;
