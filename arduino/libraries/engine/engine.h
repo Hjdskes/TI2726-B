@@ -50,8 +50,8 @@ class Engine {
 
 		void moveForward(const int speed);
 		void moveBackward(const int speed);
-		void turnLeft(const int speed, const int angular);
-		void turnRight(const int speed, const int angular);
+		void turnLeft(const int speed);
+		void turnRight(const int speed);
 };
 
 #endif /* _ENGINE_H_ */

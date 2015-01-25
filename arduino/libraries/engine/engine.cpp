@@ -6,8 +6,6 @@
  * Piet van Agtmaal, 4321278
  */
 
-#include <stdlib.h>
-
 #include "engine.h"
 #include "motor.h"
 
@@ -24,12 +22,12 @@ void Engine::moveBackward(const int speed) {
 	right->backward(speed);
 }
 
-void Engine::turnLeft(const int speed, const int angular) {
+void Engine::turnLeft(const int speed) {
 	left->forward(speed / 3);
 	right->forward(speed);
 }
 
-void Engine::turnRight(const int speed, const int angular) {
+void Engine::turnRight(const int speed) {
 	left->forward(speed);
 	right->forward(speed / 3);
 }
@@ -43,15 +41,15 @@ void Engine::move(const bool forward, const int speed, const int angular) {
 		}
 	} else if (angular < 0) {
 		if (forward) {
-			turnLeft(speed, abs(angular));
+			turnLeft(speed);
 		} else {
-			turnRight(speed, abs(angular));
+			turnRight(speed);
 		}
 	} else {
 		if (forward) {
-			turnRight(speed, angular);
+			turnRight(speed);
 		} else {
-			turnLeft(speed, angular);
+			turnLeft(speed);
 		}
 	}
 }
